@@ -1,0 +1,97 @@
+Apache Airflow:
+Job Scheduler
+ -- Multiple tasks
+the tasks are defined as DAG
+
+-->DAG Definition file -- will contain the definition of DAG which will contain the task. we can define the interdependency and sequence of jobs.
+we can define the tasks to run in parallel.
+
+Benefits of apache airflow:
+1.DAG Scheduler
+2.Dynamic (dynamic configuration as a code (python))
+3.Extensible (lot of extensions available to execute different tasks)
+ ex: shell, big data,etc.,
+  -- can define the custom extensions
+4.Scalability 
+  -- can define the "n" number of tasks.
+5.Configurable
+
+Creation of DAG Definition file:
+1. import python packages
+2. Configure parameters (owner,tasks retries,email,start date,end date)
+3. DAG object instantiation
+4. start defining the tasks
+5. Tasks dependencies
+
+the task dependencies should be acyclic.
+
+Operators in Airflow:
+how the tasks should be executed is defined by the operators.
+some of the operators:
+1.Bash operator
+2.python operator
+3.hive operator
+4.sql operator
+5.s3 operator
+6.gcp operator(Big Query,start/stop gcp compute engine,gc functions)
+7.docker operator
+8.email operator
+
+the tasks can be executed on the different machines and there will be the resource manager.
+1.Local Executor(local machine)
+2.celery executor (rabbit mq)
+3.Dask
+4.Mesos
+
+xCOM( cross communication)
+-- used to communicate between the tasks.
+
+1.push
+2.pull
+
+Job Monitoring in airflow:
+provides the visualisation of jobs
+we can see which task is currently running
+we can see the progress of the workflow.
+
+provides 2 ways to monitor:
+1.webserver (UI)
+2.CLI
+3.API
+
+LOGS:
+can be mentioned in airflow.cfg
+logs can be sent to the remote machine
+
+airflow scheduler:
+defines whether the job should run on how frequently.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

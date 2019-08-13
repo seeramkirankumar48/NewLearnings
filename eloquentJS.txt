@@ -1,0 +1,31 @@
+Javascript:
+-----------
+to display the string we can use the console.log
+
+//the string displayed with in double quotes or single quotes behave in the same way.but with the back ticks we can make use of the template indicator.
+
+<script>
+console.log(`half of 100 is:${100/2}`)
+</script>
+
+//the template indicator is $.
+
+//In order to determine the type we can use the typeof
+
+console.log(typeof 10)//number
+console.log(typeof "x")//string
+
+There is only one value in JavaScript that is not equal to itself, and that is
+NaN (“not a number”).
+
+console.log(NaN == NaN)
+
+Logical Operators:
+------------------
+and(&&) or(||) not(!)
+
+Ternary (?:)
+
+JS type coercion:
+-----------------
+

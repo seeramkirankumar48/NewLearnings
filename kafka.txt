@@ -1,0 +1,1718 @@
+what if the leader partition is down and the followers are not in sync with the leader?
+  -- it will result in the data inconsistent state. to avoid this we can set the parameter of acks
+difference between broker-list and bootstrap-server?
+log retention for the individual topic?
+	--the log retention is configured in the topic is per partition.
+zookeeper ensemble with the odd number of nodes?
+how the log retention works in kafka?
+	--the log retention is configured according to the settings and if the either of the settings is true(log.retention.ms or log.retention.bytes) then it trigger the clean up activities for the partition in the topic.
+
+
+
+
+kafka:
+--------
+Producer
+Consumer
+Topic
+Partition
+Cluster
+Consumergroup
+
+
+Before starting the kafka broker we need to start zookeeper.
+
+global unique identifier for the message: topicName->partitionNumber->offset
+why partitionNumber because it will capture the sequence Number local to the server and partition.
+
+A.the total number of consumers in the consumer group should be equal to the number of partitions.
+B.each consumer can read atleast one partition.
+C.kafka doesn't allow a single partition read by more than one consumer.(to avoid double reading of the records)
+
+starting zookeeper:
+zookeeper-server-start.sh config/zookeeper.properties
+
+starting kafka-server:
+kafka-server-start.sh config/server.properties
+
+creating the topic:
+kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+list the topics:
+kafka-topics.sh --list --bootstrap-server localhost:9092
+
+sending messages from kafka producer:
+kafka-console-producer.sh --broker-list localhost:9092 --topic test
+
+kafka consumer:
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning
+
+describing the topic in kafka:
+
+kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic my-replicated-topic
+
+Topic:my-replicated-topic   PartitionCount:1    ReplicationFactor:3 Configs:
+    Topic: my-replicated-topic  Partition: 0    Leader: 1   Replicas: 1,2,0 Isr: 1,2,0
+	
+
+By default, when kafka producer tries to send the data to the kafka server and if the topic is not available then it will automatically create the topic.
+
+kafka tries to distribute the partitions of the topic evenly on the available servers.
+if there is only one kafka server available and the number of partitions are 2 then it will create the 2 partitions in the single available kafka server.
+
+set the high replication factor if the data is critical or the h/w of the kafka servers is of commodity h/w.
+
+for every partition in the given topic, kafka assigns the leader for that particular topic and this leader topic is responsible for all the client interactions.(producers writing the data to this partition and consumers reading the data from this partition).
+
+kafka server properties:
+
+broker.id=1  #unique identifier for the broker
+listeners=PLAINTEXT://:9093 #broker will use this port to communicate with the producer and consumer.
+log.dirs=/tmp/kafka-logs-1  #data directory of the broker
+zookeepr.connect=localhost:2181 #zookeeper port, all the brokers are connected to the zookeeper to form the cluster.
+delete.topic.enable=false #doesn't allow for the automatic deletion of the topic.
+auto.create.topics.enable=true #enables automatic creation of the topic.
+default.replication.factor = 3 # the default replication factor when a topic is created.
+num.partitions=2 #default number of partitions when a topic is created
+num.recovery.threads.per.data.dir=8
+message.max.bytes)=1MB #(by default)
+
+log.retention.bytes
+log.retention.ms
+log.retention.minutes
+log.retention.hours
+
+
+kafka producer Api:
+
+If there are 1000 messages with the same key they will eventually land in the same kafka server.
+if the key is not provided then the messages are distributed evenly across the available kafka servers.(round robin alogrithm)
+we need to mention the serializer classes because kakfa will only accept the messages in the form of byte[].
+kafka producer can maintain the producerbuffer to send the messages in the batch instead of sending the each individual message.
+the producer api's may try if the messages are not recieved to the kafka server.
+
+different approaches to implemente producers:
+
+1.send and forget
+2.asynchronus
+3.synchronus #returns Future<RecordMetadata> on success, on failure returns exception.
+
+1.SimpleProducer.java:
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+public class SimpleProducer {
+  
+   public static void main(String[] args) throws Exception{
+           
+      String topicName = "SimpleProducerTopic";
+	  String key = "Key1";
+	  String value = "Value-1";
+      
+      Properties props = new Properties();
+      props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+      props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");         
+      props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+	        
+      Producer<String, String> producer = new KafkaProducer <>(props);
+	
+	  ProducerRecord<String, String> record = new ProducerRecord<>(topicName,key,value);
+	  producer.send(record);	 //send and forget      
+      producer.close();
+	  
+	  System.out.println("SimpleProducer Completed.");
+   }
+}
+
+
+2.SyncrhonousProducer.java
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+public class SynchronousProducer {
+
+   public static void main(String[] args) throws Exception{
+
+      String topicName = "SynchronousProducerTopic";
+          String key = "Key1";
+          String value = "Value-1";
+
+      Properties props = new Properties();
+      props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+      props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+      props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+      Producer<String, String> producer = new KafkaProducer <>(props);
+
+          ProducerRecord<String, String> record = new ProducerRecord<>(topicName,key,value);
+
+      try{
+           RecordMetadata metadata = producer.send(record).get();
+           System.out.println("Message is sent to Partition no " + metadata.partition() + " and offset " + metadata.offset());
+           System.out.println("SynchronousProducer Completed with success.");
+      }catch (Exception e) {
+           e.printStackTrace();
+           System.out.println("SynchronousProducer failed with an exception");
+      }finally{
+           producer.close();
+      }
+   }
+}
+
+
+3.AsynchronousProducer.java
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+
+public class AsynchronousProducer {
+
+   public static void main(String[] args) throws Exception{
+      String topicName = "AsynchronousProducerTopic";
+          String key = "Key1";
+          String value = "Value-1";
+
+      Properties props = new Properties();
+      props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+      props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+      props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+      Producer<String, String> producer = new KafkaProducer <>(props);
+
+      ProducerRecord<String, String> record = new ProducerRecord<>(topicName,key,value);
+
+      producer.send(record, new MyProducerCallback());
+      System.out.println("AsynchronousProducer call completed");
+      producer.close();
+
+   }
+
+}
+
+    class MyProducerCallback implements Callback{
+
+       @Override
+       public  void onCompletion(RecordMetadata recordMetadata, Exception e) {
+        if (e != null)
+            System.out.println("AsynchronousProducer failed with an exception");
+                else
+                        System.out.println("AsynchronousProducer call Success:");
+       }
+   }
+
+
+max.in.flight.requests.per.connection --> the max in flight messages that broker can wait without getting the response from the server and this is per connection.
+
+kafka Partitioner:
+
+partitioner rules:
+
+Default Partitoner:
+a.if a partition is specified then use that partition.
+b.if a key is specified then the hash of the key is used to determine the partition.
+c.if no key is used then the data is distributed evenly in the round robin fashion.
+
+Custom Partitioner:
+
+reserve 30% for TSS and the rest of them for the other sensors.
+
+SensorProducer.java:
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+public class SensorProducer {
+
+   public static void main(String[] args) throws Exception{
+
+      String topicName = "SensorTopic";
+
+      Properties props = new Properties();
+      props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+      props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+      props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+      props.put("partitioner.class", "SensorPartitioner");
+      props.put("speed.sensor.name", "TSS");
+
+      Producer<String, String> producer = new KafkaProducer <>(props);
+
+         for (int i=0 ; i<10 ; i++)
+         producer.send(new ProducerRecord<>(topicName,"SSP"+i,"500"+i));
+
+         for (int i=0 ; i<10 ; i++)
+         producer.send(new ProducerRecord<>(topicName,"TSS","500"+i));
+
+      producer.close();
+
+          System.out.println("SimpleProducer Completed.");
+   }
+}
+
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.common.*;
+import org.apache.kafka.common.utils.*;
+import org.apache.kafka.common.record.*;
+
+public class SensorPartitioner implements Partitioner {
+
+     private String speedSensorName;
+
+     public void configure(Map<String, ?> configs) {
+          speedSensorName = configs.get("speed.sensor.name").toString();
+
+     }
+
+     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+
+           List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
+           int numPartitions = partitions.size();
+           int sp = (int)Math.abs(numPartitions*0.3);
+           int p=0;
+
+            if ( (keyBytes == null) || (!(key instanceof String)) )
+                 throw new InvalidRecordException("All messages must have sensor name as key");
+
+            if ( ((String)key).equals(speedSensorName) )
+                 p = Utils.toPositive(Utils.murmur2(valueBytes)) % sp;
+            else
+                 p = Utils.toPositive(Utils.murmur2(keyBytes)) % (numPartitions-sp) + sp ;
+
+                 System.out.println("Key = " + (String)key + " Partition = " + p );
+                 return p;
+  }
+      public void close() {}
+
+}
+
+//the configure and close methods are called only once.
+
+
+common exceptions that occur before hitting the message to the broker:
+SerializationException
+BufferExhaustedException
+TimeoutException
+InterruptException
+
+kafka producer can face 2 types of errors:
+1.Retriable errors
+2.non-Retriable errors
+
+if the order of the messages is important:
+in.flight.requests.per.session=1
+(or)
+synchronous send
+
+we need to set the max.inflight messages to 1 because say, if in the 1st batch there are 5 messages that are sent to the server and if they failed due to some error (due to broker re-election), and in the second batch there are 5 more messages and got succeeded due to (new broker elected as leader) then there will be no order of the messaging hence it is set to 1.  
+
+Available Generic Serialization libraries:
+Avro,Thrift,Protobuf
+
+kafka Custom Serializer:
+
+kafka doesn't know when writing the data to the server and while reading the data from kafka server to the consumer. it knows only the byte[]
+so we need to specify both the serializer and deserializer for the producer api.
+
+Supplier.java:
+
+import java.util.Date;
+public class Supplier{
+        private int supplierId;
+        private String supplierName;
+        private Date supplierStartDate;
+
+        public Supplier(int id, String name, Date dt){
+                this.supplierId = id;
+                this.supplierName = name;
+                this.supplierStartDate = dt;
+        }
+
+        public int getID(){
+                return supplierId;
+        }
+
+        public String getName(){
+                return supplierName;
+        }
+
+        public Date getStartDate(){
+                return supplierStartDate;
+        }
+}
+
+
+SupplierSerializer.java:
+
+import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.common.errors.SerializationException;
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+import java.nio.ByteBuffer;
+
+public class SupplierSerializer implements Serializer<Supplier> {
+    private String encoding = "UTF8";
+
+    @Override
+    public void configure(Map<String, ?> configs, boolean isKey) {
+                // nothing to configure
+    }
+
+    @Override
+    public byte[] serialize(String topic, Supplier data) {
+
+                int sizeOfName;
+                int sizeOfDate;
+                byte[] serializedName;
+                byte[] serializedDate;
+
+        try {
+            if (data == null)
+                return null;
+								serializedName = data.getName().getBytes(encoding);
+                                sizeOfName = serializedName.length;
+                                serializedDate = data.getStartDate().toString().getBytes(encoding);
+                                sizeOfDate = serializedDate.length;
+
+                                ByteBuffer buf = ByteBuffer.allocate(4+4+sizeOfName+4+sizeOfDate);
+                                buf.putInt(data.getID());
+                                buf.putInt(sizeOfName);
+                                buf.put(serializedName);
+                                buf.putInt(sizeOfDate);
+                                buf.put(serializedDate);
+
+
+                return buf.array();
+
+        } catch (Exception e) {
+            throw new SerializationException("Error when serializing Supplier to byte[]");
+        }
+    }
+
+    @Override
+    public void close() {
+        // nothing to do
+    }
+}
+
+SupplierDeserializer.java:
+
+import java.nio.ByteBuffer;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.common.serialization.Deserializer;
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+
+public class SupplierDeserializer implements Deserializer<Supplier> {
+    private String encoding = "UTF8";
+
+    @Override
+    public void configure(Map<String, ?> configs, boolean isKey) {
+                //Nothing to configure
+        }
+
+    @Override
+    public Supplier deserialize(String topic, byte[] data) {
+
+        try {
+            if (data == null){
+                System.out.println("Null recieved at deserialize");
+                                return null;
+                                }
+            ByteBuffer buf = ByteBuffer.wrap(data);
+            int id = buf.getInt();
+
+            int sizeOfName = buf.getInt();
+            byte[] nameBytes = new byte[sizeOfName];
+            buf.get(nameBytes);
+            String deserializedName = new String(nameBytes, encoding);
+
+            int sizeOfDate = buf.getInt();
+            byte[] dateBytes = new byte[sizeOfDate];
+            buf.get(dateBytes);
+            String dateString = new String(dateBytes,encoding);
+
+            DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
+
+            return new Supplier(id,deserializedName,df.parse(dateString));
+
+
+
+        } catch (Exception e) {
+            throw new SerializationException("Error when deserializing byte[] to Supplier");
+        }
+    }
+
+    @Override
+    public void close() {
+        // nothing to do
+    }
+}
+
+SupplierProducer.java:
+
+import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import org.apache.kafka.clients.producer.*;
+public class SupplierProducer {
+
+   public static void main(String[] args) throws Exception{
+
+      String topicName = "SupplierTopic";
+
+      Properties props = new Properties();
+      props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+      props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+      props.put("value.serializer", "SupplierSerializer");
+
+      Producer<String, Supplier> producer = new KafkaProducer <>(props);
+
+          DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+          Supplier sp1 = new Supplier(101,"Xyz Pvt Ltd.",df.parse("2016-04-01"));
+          Supplier sp2 = new Supplier(102,"Abc Pvt Ltd.",df.parse("2012-01-01"));
+
+         producer.send(new ProducerRecord<String,Supplier>(topicName,"SUP",sp1)).get();
+         producer.send(new ProducerRecord<String,Supplier>(topicName,"SUP",sp2)).get();
+
+                 System.out.println("SupplierProducer Completed.");
+         producer.close();
+
+   }
+}
+
+SupplierConsumer.java:
+
+import java.util.*;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+public class SupplierConsumer{
+
+        public static void main(String[] args) throws Exception{
+
+                String topicName = "SupplierTopic";
+                String groupName = "SupplierTopicGroup";
+
+                Properties props = new Properties();
+                props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+                props.put("group.id", groupName);
+                props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+                props.put("value.deserializer", "SupplierDeserializer");
+
+
+                KafkaConsumer<String, Supplier> consumer = new KafkaConsumer<>(props);
+                consumer.subscribe(Arrays.asList(topicName));
+
+                while (true){
+                        ConsumerRecords<String, Supplier> records = consumer.poll(100);
+                        for (ConsumerRecord<String, Supplier> record : records){
+                                System.out.println("Supplier id= " + String.valueOf(record.value().getID()) + " Supplier  Name = " + record.value().getName() + " Supplier Start Date = " + record.value().getStartDate().toString());
+                        }
+                }
+
+        }
+}
+
+Consumer Group:
+The number of consumers in the consumer group should be ideally equal to the number of partitions in the topic.However if the number of consumers in the consumer group exceed the number of partitions, kafka won't complain about the additional consumers instead these additional consumers sit ideal and nothing to do with.
+
+whenever a new consumer is added to the consumer group and exited from the consumer group there will be 2 actors that will oversee the operations:
+1.Group Coordinator -- one of the broker is elected as the GroupCoordinator in which it will maintain the list of active consumers. when ever a new consumer is added or exited from the consumer group. it will order the rebalance activity to the GroupLeader.
+2.Group Leader -- Group leader executes the rebalance activity and shares the partitions to the new consumers.
+
+During the rebalance activity the consumers are not allowed to read the data from the partitions.
+
+Kafka Consumer:
+
+If the consumer is not polling to the kafka server frequently the GroupCoordinator will assume that the consumer is dead.
+Every time the consumer is polling to the broker it will send the heart beat to the GroupCoordinator to let know the GroupCoordinator that the consumer is active.
+It will be set by 2 parameters:
+
+heartbeat.interval.ms
+session.timeout.ms
+
+these values should be set to higher value if we can't poll for every 3 seconds.
+
+Seperating out the consumer properties:
+
+SupplierConsumer.properties
+
+bootstrap.servers=localhost:9092,localhost:9093
+key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+value.deserializer=SupplierDeserializer
+group.id=SupplierTopicGroup
+
+NewSupplierConsumer.java
+
+import java.util.*;
+import java.io.*;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+public class NewSupplierConsumer{
+
+    public static void main(String[] args) throws Exception{
+
+        String topicName = "SupplierTopic";
+        String groupName = "SupplierTopicGroup";
+        Properties props = new Properties();
+        //props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+        //props.put("group.id", groupName);
+        //props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        //props.put("value.deserializer", "SupplierDeserializer");
+
+        InputStream input = null;
+        KafkaConsumer<String, Supplier> consumer = null;
+
+        try {
+            input = new FileInputStream("SupplierConsumer.properties");
+            props.load(input);
+            consumer = new KafkaConsumer<>(props);
+            consumer.subscribe(Arrays.asList(topicName));
+
+            while (true){
+                ConsumerRecords<String, Supplier> records = consumer.poll(100);
+                for (ConsumerRecord<String, Supplier> record : records){
+                    System.out.println("Supplier id= " + String.valueOf(record.value().getID()) + " Supplier  Name = " + record.value().getName() + " Supplier Start Date = " + record.value().getStartDate().toString());
+                }
+            }
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }finally{
+            input.close();
+            consumer.close();
+        }
+    }
+}
+
+
+Offset Management:
+Current Offset -- Sent Records
+Committed offset -- processed records
+
+The committed offset is important in terms of partition rebalance.
+so whenever a partition is rebalanced (one broker to the other broker) the kafka server will ask what all the records to be processed -- it is committed offset.
+
+how to commit the offset:
+1.AutoCommit
+	enable.auto.commit=true (ByDefault)
+	auto.commit.interval.ms=5000 (ByDefault)
+	
+The AutoCommit will be dangerous because whenever the consumer is polling the records from the kafka cluster let us assume that it fetched 10 records and it has processed in less than the time interval(auto.commit.interval.ms) and it will poll again and get the next 10 records(so total 20 records) if in case processing these records a rebalance has happened then it will delegate polling the records to another kafka broker and since last offset is not commited due to the interval of 4 sec then it will fetch the records again from the beginning.so we need to go for manual commit. 
+
+2.Manual Commit
+	CommitSync -- will retry if there are retriable erros and will block the call.
+	CommitAsync -- will not retry and will not block the call.
+	
+CommitAsync will not retry because say if the consumer wants to commit 75 and due to some retrialbe error it was failed then in between commit 100 is issued then we dont want the commit 75 to happen so they decided for not retries.
+
+
+ManualConsumer.java
+
+import java.util.*;
+import java.io.*;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+public class ManualConsumer{
+
+    public static void main(String[] args) throws Exception{
+
+        String topicName = "SupplierTopic";
+        String groupName = "SupplierTopicGroup";
+
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+        props.put("group.id", groupName);
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "SupplierDeserializer");
+        props.put("enable.auto.commit", "false");
+
+        KafkaConsumer<String, Supplier> consumer = null;
+
+        try {
+            consumer = new KafkaConsumer<>(props);
+            consumer.subscribe(Arrays.asList(topicName));
+
+            while (true){
+                ConsumerRecords<String, Supplier> records = consumer.poll(100);
+                for (ConsumerRecord<String, Supplier> record : records){
+                    System.out.println("Supplier id= " + String.valueOf(record.value().getID()) + " Supplier  Name = " + record.value().getName() + " Supplier Start Date = " + record.value().getStartDate().toString());
+                }
+                consumer.commitAsync();
+            }
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }finally{
+            consumer.commitSync();
+            consumer.close();
+        }
+    }
+}
+
+
+//The above code has some problem what happens if a rebalance is triggered after processing the 50 records. so we need to commit the offset post processing.
+
+//There is also a problem in which if the records that are sent by polling is a large set of records and consumer is busy processing the records then the next poll is delayed and consumer coordinator assumes that this consumer is dead.
+
+we need to know :
+1.how to commit the offset
+2.how to know the partition rebalance is triggered
+
+in order to know whether the partition rebalance is triggered.
+
+ConsumerRebalanceListener -- will looks after the consumer co-ordinator and listens to it
+
+it has 2 methods:
+
+1.onPartitionsRevoked -- we will commit the current offset just before onRevoke
+2.onPartitionsAssigned
+
+RandomProducer.java:
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+public class RandomProducer {
+  
+   public static void main(String[] args) throws InterruptedException{
+           
+      String topicName = "RandomProducerTopic";
+      String msg;
+      
+      Properties props = new Properties();
+      props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+      props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");         
+      props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+            
+      Producer<String, String> producer = new KafkaProducer <>(props);
+      Random rg = new Random();
+      Calendar dt = Calendar.getInstance();
+      dt.set(2016,1,1);
+      try{
+          while(true){
+              for (int i=0;i<100;i++){
+                msg = dt.get(Calendar.YEAR)+"-"+dt.get(Calendar.MONTH)+"-"+dt.get(Calendar.DATE) + "," + rg.nextInt(1000);
+                producer.send(new ProducerRecord<String, String>(topicName,0,"Key",msg)).get();
+                msg = dt.get(Calendar.YEAR)+"-"+dt.get(Calendar.MONTH)+"-"+dt.get(Calendar.DATE) + "," + rg.nextInt(1000);
+                producer.send(new ProducerRecord<String, String>(topicName,1,"Key",msg)).get();
+              }
+              dt.add(Calendar.DATE,1);
+              System.out.println("Data Sent for " + dt.get(Calendar.YEAR) + "-" + dt.get(Calendar.MONTH) + "-" + dt.get(Calendar.DATE) );
+          }
+      }
+      catch(Exception ex){
+          System.out.println("Intrupted");
+      }
+      finally{
+          producer.close();
+        }
+      
+   }
+}
+
+
+RandomConsumer.java:
+
+import java.util.*;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.*;
+
+public class RandomConsumer{
+    
+    
+    public static void main(String[] args) throws Exception{
+
+            String topicName = "RandomProducerTopic";
+            KafkaConsumer<String, String> consumer = null;
+            
+            String groupName = "RG";
+            Properties props = new Properties();
+            props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+            props.put("group.id", groupName);
+            props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            props.put("enable.auto.commit", "false");
+
+            consumer = new KafkaConsumer<>(props);
+            RebalanceListner rebalanceListner = new RebalanceListner(consumer);
+            
+            consumer.subscribe(Arrays.asList(topicName),rebalanceListner);
+            try{
+                while (true){
+                    ConsumerRecords<String, String> records = consumer.poll(100);
+                    for (ConsumerRecord<String, String> record : records){
+                        //System.out.println("Topic:"+ record.topic() +" Partition:" + record.partition() + " Offset:" + record.offset() + " Value:"+ record.value());
+                       // Do some processing and save it to Database
+                        rebalanceListner.addOffset(record.topic(), record.partition(),record.offset());
+                    }
+                        //consumer.commitSync(rebalanceListner.getCurrentOffsets());
+                }
+            }catch(Exception ex){
+                System.out.println("Exception.");
+                ex.printStackTrace();
+            }
+            finally{
+                    consumer.close();
+            }
+    }
+    
+}
+
+RebalanceListner.java:
+
+import java.util.*;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.*;
+
+public class RebalanceListner implements ConsumerRebalanceListener {
+    private KafkaConsumer consumer;
+    private Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap();
+
+    public RebalanceListner(KafkaConsumer con){
+        this.consumer=con;
+    }
+    
+    public void addOffset(String topic, int partition, long offset){
+        currentOffsets.put(new TopicPartition(topic, partition),new OffsetAndMetadata(offset,"Commit"));
+    }
+    
+    public Map<TopicPartition, OffsetAndMetadata> getCurrentOffsets(){
+        return currentOffsets;
+    }
+    
+    public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+        System.out.println("Following Partitions Assigned ....");
+        for(TopicPartition partition: partitions)                
+            System.out.println(partition.partition()+",");
+    }
+
+    public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+        System.out.println("Following Partitions Revoked ....");
+        for(TopicPartition partition: partitions)                
+            System.out.println(partition.partition()+",");
+                
+        
+        System.out.println("Following Partitions commited ...." );
+        for(TopicPartition tp: currentOffsets.keySet())
+            System.out.println(tp.partition());
+        
+        consumer.commitSync(currentOffsets);
+        currentOffsets.clear();
+    }
+}
+
+whenever the rebalance activity is triggered kafka will automatically assign the parititions to different servers.
+suppose in the sensor if there are totally 10 partitions and we need the data only from the TSS sensor and ignoring all the 7 partitions.
+
+the above manual commit has also a pitfall if the consumer crashes while doing the commit since it is not atomic:
+
+sql Script:
+
+create database test;
+use test;
+create table tss_data(skey varchar(50), svalue varchar(50));
+create table tss_offsets(topic_name varchar(50),partition int, offset int);
+insert into tss_offsets values('SensorTopic1',0,0);
+insert into tss_offsets values('SensorTopic1',1,0);
+insert into tss_offsets values('SensorTopic1',2,0);
+
+
+SensorConsumer.java:
+
+import java.util.*;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.*;
+import java.sql.*;
+
+public class SensorConsumer{
+
+
+    public static void main(String[] args) throws Exception{
+
+            String topicName = "SensorTopic";
+            KafkaConsumer<String, String> consumer = null;
+            int rCount;
+
+            Properties props = new Properties();
+            props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+            props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            props.put("enable.auto.commit", "false");
+
+            consumer = new KafkaConsumer<>(props);
+            TopicPartition p0 = new TopicPartition(topicName, 0);
+            TopicPartition p1 = new TopicPartition(topicName, 1);
+            TopicPartition p2 = new TopicPartition(topicName, 2);
+
+            consumer.assign(Arrays.asList(p0,p1,p2));
+            System.out.println("Current position p0=" + consumer.position(p0)
+                             + " p1=" + consumer.position(p1)
+                             + " p2=" + consumer.position(p2));
+
+            consumer.seek(p0, getOffsetFromDB(p0));
+            consumer.seek(p1, getOffsetFromDB(p1));
+            consumer.seek(p2, getOffsetFromDB(p2));
+            System.out.println("New positions po=" + consumer.position(p0)
+                             + " p1=" + consumer.position(p1)
+                             + " p2=" + consumer.position(p2));
+
+            System.out.println("Start Fetching Now");
+            try{
+                do{
+                    ConsumerRecords<String, String> records = consumer.poll(1000);
+                    System.out.println("Record polled " + records.count());
+                    rCount = records.count();
+                    for (ConsumerRecord<String, String> record : records){
+                        saveAndCommit(consumer,record);
+                    }
+                }while (rCount>0);
+            }catch(Exception ex){
+                System.out.println("Exception in main.");
+            }
+            finally{
+                    consumer.close();
+            }
+    }
+
+    private static long getOffsetFromDB(TopicPartition p){
+        long offset = 0;
+        try{
+                Class.forName("com.mysql.jdbc.Driver");
+                Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/test","root","pandey");
+
+                String sql = "select offset from tss_offsets where topic_name='" + p.topic() + "' and partition=" + p.partition();
+                Statement stmt=con.createStatement();
+                ResultSet rs = stmt.executeQuery(sql);
+                if (rs.next())
+                    offset = rs.getInt("offset");
+                stmt.close();
+                con.close();
+            }catch(Exception e){
+                System.out.println("Exception in getOffsetFromDB");
+            }
+        return offset;
+    }
+
+    private static void saveAndCommit(KafkaConsumer<String, String> c, ConsumerRecord<String, String> r){
+        System.out.println("Topic=" + r.topic() + " Partition=" + r.partition() + " Offset=" + r.offset() + " Key=" + r.key() + " Value=" + r.value());
+        try{
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/test","root","pandey");
+            con.setAutoCommit(false);
+
+            String insertSQL = "insert into tss_data values(?,?)";
+            PreparedStatement psInsert = con.prepareStatement(insertSQL);
+            psInsert.setString(1,r.key());
+            psInsert.setString(2,r.value());
+
+            String updateSQL = "update tss_offsets set offset=? where topic_name=? and partition=?";
+            PreparedStatement psUpdate = con.prepareStatement(updateSQL);
+            psUpdate.setLong(1,r.offset()+1);
+            psUpdate.setString(2,r.topic());
+            psUpdate.setInt(3,r.partition());
+
+            psInsert.executeUpdate();
+            psUpdate.executeUpdate();
+            con.commit();
+            con.close();
+        }catch(Exception e){
+            System.out.println("Exception in saveAndCommit");
+        }
+
+    }
+}
+
+#Avro schemas are defined using json.
+
+Schema Evolution:
+
+AvroProducer-V1
+
+
+{ "type": "record",
+  "name": "ClickRecord",
+  "fields": [
+     {"name": "session_id", "type": "string"},
+     {"name": "browser", "type": ["string", "null"]},
+     {"name": "campaign", "type": ["string", "null"]},
+     {"name": "channel", "type": "string"},
+     {"name": "referrer", "type": ["string", "null"], "default": "None"},
+     {"name": "ip", "type": ["string", "null"]}
+   ]
+}
+
+ClickRecord.java
+
+/**
+ * Autogenerated by Avro
+ *
+ * DO NOT EDIT DIRECTLY
+ */
+
+import org.apache.avro.specific.SpecificData;
+
+@SuppressWarnings("all")
+@org.apache.avro.specific.AvroGenerated
+public class ClickRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  private static final long serialVersionUID = 4134365027792852721L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ClickRecord\",\"fields\":[{\"name\":\"session_id\",\"type\":\"string\"},{\"name\":\"browser\",\"type\":[\"string\",\"null\"]},{\"name\":\"campaign\",\"type\":[\"string\",\"null\"]},{\"name\":\"channel\",\"type\":\"string\"},{\"name\":\"referrer\",\"type\":[\"string\",\"null\"],\"default\":\"None\"},{\"name\":\"ip\",\"type\":[\"string\",\"null\"]}]}");
+  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+  @Deprecated public java.lang.CharSequence session_id;
+  @Deprecated public java.lang.CharSequence browser;
+  @Deprecated public java.lang.CharSequence campaign;
+  @Deprecated public java.lang.CharSequence channel;
+  @Deprecated public java.lang.CharSequence referrer;
+  @Deprecated public java.lang.CharSequence ip;
+
+  /**
+   * Default constructor.  Note that this does not initialize fields
+   * to their default values from the schema.  If that is desired then
+   * one should use <code>newBuilder()</code>.
+   */
+  public ClickRecord() {}
+
+  /**
+   * All-args constructor.
+   * @param session_id The new value for session_id
+   * @param browser The new value for browser
+   * @param campaign The new value for campaign
+   * @param channel The new value for channel
+   * @param referrer The new value for referrer
+   * @param ip The new value for ip
+   */
+  public ClickRecord(java.lang.CharSequence session_id, java.lang.CharSequence browser, java.lang.CharSequence campaign, java.lang.CharSequence channel, java.lang.CharSequence referrer, java.lang.CharSequence ip) {
+    this.session_id = session_id;
+    this.browser = browser;
+    this.campaign = campaign;
+    this.channel = channel;
+    this.referrer = referrer;
+    this.ip = ip;
+  }
+
+  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  // Used by DatumWriter.  Applications should not call.
+  public java.lang.Object get(int field$) {
+    switch (field$) {
+    case 0: return session_id;
+    case 1: return browser;
+    case 2: return campaign;
+    case 3: return channel;
+    case 4: return referrer;
+    case 5: return ip;
+    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    }
+  }
+
+  // Used by DatumReader.  Applications should not call.
+  @SuppressWarnings(value="unchecked")
+  public void put(int field$, java.lang.Object value$) {
+    switch (field$) {
+    case 0: session_id = (java.lang.CharSequence)value$; break;
+    case 1: browser = (java.lang.CharSequence)value$; break;
+    case 2: campaign = (java.lang.CharSequence)value$; break;
+    case 3: channel = (java.lang.CharSequence)value$; break;
+    case 4: referrer = (java.lang.CharSequence)value$; break;
+    case 5: ip = (java.lang.CharSequence)value$; break;
+    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    }
+  }
+
+  /**
+   * Gets the value of the 'session_id' field.
+   * @return The value of the 'session_id' field.
+   */
+  public java.lang.CharSequence getSessionId() {
+    return session_id;
+  }
+
+  /**
+   * Sets the value of the 'session_id' field.
+   * @param value the value to set.
+   */
+  public void setSessionId(java.lang.CharSequence value) {
+    this.session_id = value;
+  }
+
+  /**
+   * Gets the value of the 'browser' field.
+   * @return The value of the 'browser' field.
+   */
+  public java.lang.CharSequence getBrowser() {
+    return browser;
+  }
+
+  /**
+   * Sets the value of the 'browser' field.
+   * @param value the value to set.
+   */
+  public void setBrowser(java.lang.CharSequence value) {
+    this.browser = value;
+  }
+
+  /**
+   * Gets the value of the 'campaign' field.
+   * @return The value of the 'campaign' field.
+   */
+  public java.lang.CharSequence getCampaign() {
+    return campaign;
+  }
+
+  /**
+   * Sets the value of the 'campaign' field.
+   * @param value the value to set.
+   */
+  public void setCampaign(java.lang.CharSequence value) {
+    this.campaign = value;
+  }
+
+  /**
+   * Gets the value of the 'channel' field.
+   * @return The value of the 'channel' field.
+   */
+  public java.lang.CharSequence getChannel() {
+    return channel;
+  }
+
+  /**
+   * Sets the value of the 'channel' field.
+   * @param value the value to set.
+   */
+  public void setChannel(java.lang.CharSequence value) {
+    this.channel = value;
+  }
+
+  /**
+   * Gets the value of the 'referrer' field.
+   * @return The value of the 'referrer' field.
+   */
+  public java.lang.CharSequence getReferrer() {
+    return referrer;
+  }
+
+  /**
+   * Sets the value of the 'referrer' field.
+   * @param value the value to set.
+   */
+  public void setReferrer(java.lang.CharSequence value) {
+    this.referrer = value;
+  }
+
+  /**
+   * Gets the value of the 'ip' field.
+   * @return The value of the 'ip' field.
+   */
+  public java.lang.CharSequence getIp() {
+    return ip;
+  }
+
+  /**
+   * Sets the value of the 'ip' field.
+   * @param value the value to set.
+   */
+  public void setIp(java.lang.CharSequence value) {
+    this.ip = value;
+  }
+
+  /**
+   * Creates a new ClickRecord RecordBuilder.
+   * @return A new ClickRecord RecordBuilder
+   */
+  public static ClickRecord.Builder newBuilder() {
+    return new ClickRecord.Builder();
+  }
+
+  /**
+   * Creates a new ClickRecord RecordBuilder by copying an existing Builder.
+   * @param other The existing builder to copy.
+   * @return A new ClickRecord RecordBuilder
+   */
+  public static ClickRecord.Builder newBuilder(ClickRecord.Builder other) {
+    return new ClickRecord.Builder(other);
+  }
+
+  /**
+   * Creates a new ClickRecord RecordBuilder by copying an existing ClickRecord instance.
+   * @param other The existing instance to copy.
+   * @return A new ClickRecord RecordBuilder
+   */
+  public static ClickRecord.Builder newBuilder(ClickRecord other) {
+    return new ClickRecord.Builder(other);
+  }
+
+  /**
+   * RecordBuilder for ClickRecord instances.
+   */
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<ClickRecord>
+    implements org.apache.avro.data.RecordBuilder<ClickRecord> {
+
+    private java.lang.CharSequence session_id;
+    private java.lang.CharSequence browser;
+    private java.lang.CharSequence campaign;
+    private java.lang.CharSequence channel;
+    private java.lang.CharSequence referrer;
+    private java.lang.CharSequence ip;
+
+    /** Creates a new Builder */
+    private Builder() {
+      super(SCHEMA$);
+    }
+
+    /**
+     * Creates a Builder by copying an existing Builder.
+     * @param other The existing Builder to copy.
+     */
+    private Builder(ClickRecord.Builder other) {
+      super(other);
+      if (isValidValue(fields()[0], other.session_id)) {
+        this.session_id = data().deepCopy(fields()[0].schema(), other.session_id);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.browser)) {
+        this.browser = data().deepCopy(fields()[1].schema(), other.browser);
+        fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.campaign)) {
+        this.campaign = data().deepCopy(fields()[2].schema(), other.campaign);
+        fieldSetFlags()[2] = true;
+      }
+      if (isValidValue(fields()[3], other.channel)) {
+        this.channel = data().deepCopy(fields()[3].schema(), other.channel);
+        fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.referrer)) {
+        this.referrer = data().deepCopy(fields()[4].schema(), other.referrer);
+        fieldSetFlags()[4] = true;
+      }
+      if (isValidValue(fields()[5], other.ip)) {
+        this.ip = data().deepCopy(fields()[5].schema(), other.ip);
+        fieldSetFlags()[5] = true;
+      }
+    }
+
+    /**
+     * Creates a Builder by copying an existing ClickRecord instance
+     * @param other The existing instance to copy.
+     */
+    private Builder(ClickRecord other) {
+            super(SCHEMA$);
+      if (isValidValue(fields()[0], other.session_id)) {
+        this.session_id = data().deepCopy(fields()[0].schema(), other.session_id);
+        fieldSetFlags()[0] = true;
+      }
+      if (isValidValue(fields()[1], other.browser)) {
+        this.browser = data().deepCopy(fields()[1].schema(), other.browser);
+        fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.campaign)) {
+        this.campaign = data().deepCopy(fields()[2].schema(), other.campaign);
+        fieldSetFlags()[2] = true;
+      }
+      if (isValidValue(fields()[3], other.channel)) {
+        this.channel = data().deepCopy(fields()[3].schema(), other.channel);
+        fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.referrer)) {
+        this.referrer = data().deepCopy(fields()[4].schema(), other.referrer);
+        fieldSetFlags()[4] = true;
+      }
+      if (isValidValue(fields()[5], other.ip)) {
+        this.ip = data().deepCopy(fields()[5].schema(), other.ip);
+        fieldSetFlags()[5] = true;
+      }
+    }
+
+    /**
+      * Gets the value of the 'session_id' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getSessionId() {
+      return session_id;
+    }
+
+    /**
+      * Sets the value of the 'session_id' field.
+      * @param value The value of 'session_id'.
+      * @return This builder.
+      */
+    public ClickRecord.Builder setSessionId(java.lang.CharSequence value) {
+      validate(fields()[0], value);
+      this.session_id = value;
+      fieldSetFlags()[0] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'session_id' field has been set.
+      * @return True if the 'session_id' field has been set, false otherwise.
+      */
+    public boolean hasSessionId() {
+      return fieldSetFlags()[0];
+    }
+
+
+    /**
+      * Clears the value of the 'session_id' field.
+      * @return This builder.
+      */
+    public ClickRecord.Builder clearSessionId() {
+      session_id = null;
+      fieldSetFlags()[0] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'browser' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getBrowser() {
+      return browser;
+    }
+
+    /**
+      * Sets the value of the 'browser' field.
+      * @param value The value of 'browser'.
+      * @return This builder.
+      */
+    public ClickRecord.Builder setBrowser(java.lang.CharSequence value) {
+      validate(fields()[1], value);
+      this.browser = value;
+      fieldSetFlags()[1] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'browser' field has been set.
+      * @return True if the 'browser' field has been set, false otherwise.
+      */
+    public boolean hasBrowser() {
+      return fieldSetFlags()[1];
+    }
+
+
+    /**
+      * Clears the value of the 'browser' field.
+      * @return This builder.
+      */
+    public ClickRecord.Builder clearBrowser() {
+      browser = null;
+      fieldSetFlags()[1] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'campaign' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getCampaign() {
+      return campaign;
+    }
+
+    /**
+      * Sets the value of the 'campaign' field.
+      * @param value The value of 'campaign'.
+      * @return This builder.
+      */
+    public ClickRecord.Builder setCampaign(java.lang.CharSequence value) {
+      validate(fields()[2], value);
+      this.campaign = value;
+      fieldSetFlags()[2] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'campaign' field has been set.
+      * @return True if the 'campaign' field has been set, false otherwise.
+      */
+    public boolean hasCampaign() {
+      return fieldSetFlags()[2];
+    }
+
+
+    /**
+      * Clears the value of the 'campaign' field.
+      * @return This builder.
+      */
+    public ClickRecord.Builder clearCampaign() {
+      campaign = null;
+      fieldSetFlags()[2] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'channel' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getChannel() {
+      return channel;
+    }
+
+    /**
+      * Sets the value of the 'channel' field.
+      * @param value The value of 'channel'.
+      * @return This builder.
+      */
+    public ClickRecord.Builder setChannel(java.lang.CharSequence value) {
+      validate(fields()[3], value);
+      this.channel = value;
+      fieldSetFlags()[3] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'channel' field has been set.
+      * @return True if the 'channel' field has been set, false otherwise.
+      */
+    public boolean hasChannel() {
+      return fieldSetFlags()[3];
+    }
+
+
+    /**
+      * Clears the value of the 'channel' field.
+      * @return This builder.
+      */
+    public ClickRecord.Builder clearChannel() {
+      channel = null;
+      fieldSetFlags()[3] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'referrer' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getReferrer() {
+      return referrer;
+    }
+
+    /**
+      * Sets the value of the 'referrer' field.
+      * @param value The value of 'referrer'.
+      * @return This builder.
+      */
+    public ClickRecord.Builder setReferrer(java.lang.CharSequence value) {
+      validate(fields()[4], value);
+      this.referrer = value;
+      fieldSetFlags()[4] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'referrer' field has been set.
+      * @return True if the 'referrer' field has been set, false otherwise.
+      */
+    public boolean hasReferrer() {
+      return fieldSetFlags()[4];
+    }
+
+
+    /**
+      * Clears the value of the 'referrer' field.
+      * @return This builder.
+      */
+    public ClickRecord.Builder clearReferrer() {
+      referrer = null;
+      fieldSetFlags()[4] = false;
+      return this;
+    }
+
+    /**
+      * Gets the value of the 'ip' field.
+      * @return The value.
+      */
+    public java.lang.CharSequence getIp() {
+      return ip;
+    }
+
+    /**
+      * Sets the value of the 'ip' field.
+      * @param value The value of 'ip'.
+      * @return This builder.
+      */
+    public ClickRecord.Builder setIp(java.lang.CharSequence value) {
+      validate(fields()[5], value);
+      this.ip = value;
+      fieldSetFlags()[5] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'ip' field has been set.
+      * @return True if the 'ip' field has been set, false otherwise.
+      */
+    public boolean hasIp() {
+      return fieldSetFlags()[5];
+    }
+
+
+    /**
+      * Clears the value of the 'ip' field.
+      * @return This builder.
+      */
+    public ClickRecord.Builder clearIp() {
+      ip = null;
+      fieldSetFlags()[5] = false;
+      return this;
+    }
+
+    @Override
+    public ClickRecord build() {
+      try {
+        ClickRecord record = new ClickRecord();
+        record.session_id = fieldSetFlags()[0] ? this.session_id : (java.lang.CharSequence) defaultValue(fields()[0]);
+        record.browser = fieldSetFlags()[1] ? this.browser : (java.lang.CharSequence) defaultValue(fields()[1]);
+        record.campaign = fieldSetFlags()[2] ? this.campaign : (java.lang.CharSequence) defaultValue(fields()[2]);
+        record.channel = fieldSetFlags()[3] ? this.channel : (java.lang.CharSequence) defaultValue(fields()[3]);
+        record.referrer = fieldSetFlags()[4] ? this.referrer : (java.lang.CharSequence) defaultValue(fields()[4]);
+        record.ip = fieldSetFlags()[5] ? this.ip : (java.lang.CharSequence) defaultValue(fields()[5]);
+        return record;
+      } catch (Exception e) {
+        throw new org.apache.avro.AvroRuntimeException(e);
+      }
+    }
+  }
+
+  private static final org.apache.avro.io.DatumWriter
+    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);
+
+  @Override public void writeExternal(java.io.ObjectOutput out)
+    throws java.io.IOException {
+    WRITER$.write(this, SpecificData.getEncoder(out));
+  }
+
+  private static final org.apache.avro.io.DatumReader
+    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
+
+  @Override public void readExternal(java.io.ObjectInput in)
+    throws java.io.IOException {
+    READER$.read(this, SpecificData.getDecoder(in));
+  }
+
+}
+
+AvroProducer.java:
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+public class AvroProducer {
+
+    public static void main(String[] args) throws Exception{
+
+        String topicName = "AvroClicks";
+        String msg;
+
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092,localhost:9093");        
+        props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
+        props.put("schema.registry.url", "http://localhost:8081");
+
+        Producer<String, ClickRecord> producer = new KafkaProducer <>(props);
+        ClickRecord cr = new ClickRecord();
+        try{
+            cr.setSessionId("10001");
+            cr.setChannel("HomePage");
+            cr.setIp("192.168.0.1");
+
+            producer.send(new ProducerRecord<String, ClickRecord>(topicName,cr.getSessionId().toString(),cr)).get();
+
+            System.out.println("Complete");
+        }
+        catch(Exception ex){
+            ex.printStackTrace(System.out);
+        }
+        finally{
+            producer.close();
+        }
+
+   }
+}
+
+
+AvroProducer-V2
+
+    
+{"type": "record",
+ "name": "ClickRecord",
+ "fields": [
+     {"name": "session_id", "type": "string"},
+     {"name": "browser", "type": ["string", "null"]},
+     {"name": "campaign", "type": ["string", "null"]},
+     {"name": "channel", "type": "string"},
+     {"name": "entry_url", "type": ["string", "null"], "default": "None"},
+     {"name": "ip", "type": ["string", "null"]},
+     {"name": "language", "type": ["string", "null"], "default": "None"},
+     {"name": "os", "type": ["string", "null"],"default": "None"}     
+ ]
+}
+
+
+ClickRecordProducerV2.java
+
+import java.util.*;
+import org.apache.kafka.clients.producer.*;
+public class ClickRecordProducerV2 {
+
+    public static void main(String[] args) throws Exception{
+
+        String topicName = "AvroClicks";
+        String msg;
+
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+        props.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
+        props.put("schema.registry.url", "http://localhost:8081");
+
+        Producer<String, ClickRecord> producer = new KafkaProducer <>(props);
+        ClickRecord cr = new ClickRecord();
+        try{
+            cr.setSessionId("10001");
+            cr.setChannel("HomePage");
+            cr.setIp("192.168.0.1");
+            cr.setLanguage("Spanish");
+            cr.setOs("Mac");
+            cr.setEntryUrl("http://facebook.com/myadd");
+
+            producer.send(new ProducerRecord<String, ClickRecord>(topicName,cr.getSessionId().toString(),cr)).get();
+
+            System.out.println("Complete");
+        }
+        catch(Exception ex){
+            ex.printStackTrace(System.out);
+        }
+        finally{
+            producer.close();
+        }
+
+   }
+}
+
+
+AvroConsumer-V1
+
+{ "type": "record",
+  "name": "ClickRecord",
+  "fields": [
+     {"name": "session_id", "type": "string"},
+     {"name": "browser", "type": ["string", "null"]},
+     {"name": "campaign", "type": ["string", "null"]},
+     {"name": "channel", "type": "string"},
+     {"name": "referrer", "type": ["string", "null"], "default": "None"},
+     {"name": "ip", "type": ["string", "null"]}
+   ]
+}
+
+import java.util.*;
+import org.apache.kafka.clients.consumer.*;
+
+
+public class AvroConsumer{    
+    
+    public static void main(String[] args) throws Exception{
+
+        String topicName = "AvroClicks";
+            
+        String groupName = "RG";
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+        props.put("group.id", groupName);
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
+        props.put("schema.registry.url", "http://localhost:8081");
+        props.put("specific.avro.reader", "true");
+        
+        KafkaConsumer<String, ClickRecord> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Arrays.asList(topicName));
+        try{
+            while (true){
+                ConsumerRecords<String, ClickRecord> records = consumer.poll(100);
+                for (ConsumerRecord<String, ClickRecord> record : records){
+                        System.out.println("Session id="+ record.value().getSessionId()
+                                         + " Channel=" + record.value().getChannel() 
+                                         + " Referrer=" + record.value().getReferrer());
+                    }
+                }
+            }catch(Exception ex){
+                ex.printStackTrace();
+            }
+            finally{
+                consumer.close();
+            }
+    }
+    
+}
+
+AvroConsumer-V2
+
+{"type": "record",
+ "name": "ClickRecord",
+ "fields": [
+     {"name": "session_id", "type": "string"},
+     {"name": "browser", "type": ["string", "null"]},
+     {"name": "campaign", "type": ["string", "null"]},
+     {"name": "channel", "type": "string"},
+     {"name": "entry_url", "type": ["string", "null"], "default": "None"},
+     {"name": "ip", "type": ["string", "null"]},
+     {"name": "language", "type": ["string", "null"], "default": "None"},
+     {"name": "os", "type": ["string", "null"],"default": "None"}     
+ ]
+}
+
+ClickRecordConsumerV2.java:
+
+import java.util.*;
+import org.apache.kafka.clients.consumer.*;
+
+
+public class ClickRecordConsumerV2{    
+    
+    public static void main(String[] args) throws Exception{
+
+        String topicName = "AvroClicks";
+            
+        String groupName = "RG";
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092,localhost:9093");
+        props.put("group.id", groupName);
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "io.confluent.kafka.serializers.KafkaAvroDeserializer");
+        props.put("schema.registry.url", "http://localhost:8081");
+        props.put("specific.avro.reader", "true");
+        
+        KafkaConsumer<String, ClickRecord> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Arrays.asList(topicName));
+        try{
+            while (true){
+                ConsumerRecords<String, ClickRecord> records = consumer.poll(100);
+                for (ConsumerRecord<String, ClickRecord> record : records){
+                        System.out.println("Session id="+ record.value().getSessionId()
+                                         + " Channel=" + record.value().getChannel() 
+                                         + " Entry URL=" + record.value().getEntryUrl()
+                                         + " Language=" + record.value().getLanguage());
+                    }
+                }
+            }catch(Exception ex){
+                ex.printStackTrace();
+            }
+            finally{
+                consumer.close();
+            }
+    }
+    
+}
+
+
+
+
+
+
+
+
+

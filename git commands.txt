@@ -1,0 +1,86 @@
+git init
+git status
+git add .
+git add file1.txt
+git add file1.txt file2.txt
+git commit -m "first commit"
+git remote add origin "url of remote repo"
+git push origin master
+ -- it will ask for username and password 
+ -- to check if we added to the global whether it will ask for the credentials again or not.
+git pull origin master
+git clone <<url>>
+git branch feature1 -- to create the new branch.
+git checkout -b feature1 //directly creates the branch and checkouts the branch created.
+git branch -- to list all the branches.
+git branch -D feature1 -- to delete the branch.
+git checkout feature1 -- to switch from master to other branch.
+git push origin feature1
+git log -- to get the history
+git stash
+git status -u
+git stash pop
+git revert commit_id
+git checkout commit_id // to go to the specified commit of the branch.
+git diff
+git diff commit_id1 commit_id2
+git diff HEAD . // to get the difference from the head and . represents the cwd
+git log --stat // will show what are the file changes along with the log.
+git log --oneline
+git log --author='author--name'
+git diff --staged //it will compare the staged file with git tracked file.
+git reset HEAD filename //will move the file back from the staging area.
+git diff HEAD~1 //will compare the latest commit with head-1
+ //and it will give the diff for all the files.
+git diff HEAD~1 Helloworld.java //will give differences for the specific file.
+git checkout HEAD~3 Helloworld.java
+git remote -v //will tell you whether the remote repository added or not.
+git branch -a //will tell you which branch we are on.
+
+ 
+
+git config --global user.name 'kiran kumar seeram'
+git config --global user.email 'email'
+git config --global --list
+git config --global color.ui 'auto'
+
+working directory, staging area, local repository
+
+
+git show --pretty="" --name-only <<commit_id>> //will show all the files that are part of the commit
+git reset //will abort the merge conflicts.
+git merge master feature1
+
+
+on master branch:
+git merge feature1
+git rebase feature1
+git rebase --continue
+
+
+//rebase will rewrite history?
+//when to use merge and rebase?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

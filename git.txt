@@ -1,0 +1,62 @@
+Before initializing the git make sure that we are in the right path. otherwise if we are in the root directory and do git init
+it will include the entire root dir to the git.
+
+to intialize the git:
+git init
+
+to know the status of the git:
+git status
+
+to add the file to the git staging:
+git add filename
+
+if there are lot of files to be added in staging dir:
+git add .
+
+to delete a file that is already there in the staging:
+git rm filename
+git rm -f filename//this will completly delete the file from the commit and wipe out the changes.
+
+Inorder to not remove the file and to make the file to be untracked in the staging:
+
+git rm --cached file.txt
+
+
+to list all the git configs:
+
+git config --list
+
+before setting the commit for the file:
+we need to set the username and email:
+
+to set the name :
+git config --global user.name "Kiran Kumar Seeram"
+git config --global user.email "seeramkirankumar48@gmail.com"
+
+to commit the changes to the git:
+
+git commit -m "initial commit"
+
+git commit will add all the tracked but not the untracked files
+
+to add only the tracked& untracked files(edited) but not the new files:
+git commit -a -m "initial commit"
+
+to see the log of the commits:
+git log
+
+we can go to previous commit:
+git checkout commit_id
+
+//to get back to the latest:
+git checkout master
+
+in order to revert the code back:
+
+git revert commit
+//the git revert will revert only one commit at a time.
+
+
+https://cocacolagbs.force.com/hro/apex/HROLogCase?sfdc.tabName=01rd0000000g0nF
+
+

@@ -1,0 +1,1513 @@
+python:
+-------
+//python is an interpreted,high-level,general purpose programming language.
+
+//List of keywords in python:
+
+import keyword 
+  
+# printing all keywords at once using "kwlist()" 
+print ("The list of keywords is : ") 
+print (keyword.kwlist) 
+
+
+['False', 'None', 'True', 'and', 'as', 'assert', 'break', 'class', 
+'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 
+'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 
+'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 
+'try', 'while', 'with', 'yield']
+
+//in python the code is commented using '#'
+//in python the multiline code is commented using:
+"""
+this is 
+multiline commented
+code"""
+
+//To Print on the same line:
+
+geeks geeksforgeeks
+
+print("geeks",end=" ");print("geeksforgeeks");
+
+//to get the help in repl:
+help(int)
+//to exit from help use ctrl+c
+
+//to assign the same value to mulitple variables:
+a=b=c=0
+//to assign the multiple values to multiple variables:
+a,b,c=1,"Hello",1.5
+
+//there is a special type of value called "None"
+//when an object (empty list is created it is not equal to None)
+
+a=None
+print(a) //None
+
+def add(a,b):
+          return a+b
+
+# calling method
+
+print(add(1,2))
+
+to print on the console:
+print('') or print("")
+
+to get the input from the client:
+input('') or input("")
+
+print("Enter your name:")
+name=input(">")
+print(f"your name is {name}")
+
+there are built-in functions to convert the data from one type to another:
+int()
+float()
+bool()
+
+by default, when taking the input from the client the data is treated as string type.
+
+//type is used to determine the type of variable.
+
+x=10
+print(type(x))
+
+//<class 'int'>
+//<class 'str'> //for string types.
+
+
+To get multiple inputs from the user:
+male,female=[int(x) for x in input("Enter Male,Female Count:").split(",")]
+
+print(male)
+print(female)
+
+difference between functions and methods:
+python gives several built-in functions by default like int(),print(),default(). However to handle specific functionalities we have the methods available for specific types these are called as methods ex:lower(),upper(),title()
+
+x="welcome"
+print(x.upper())
+
+Formatted Strings:
+------------------
+1.to print the variables inside the print statement:
+
+num_cars=100
+
+print("there are ",num_cars,"cars in this place")
+
+2.formatter="{}-one {}-Two {}Three"
+print(formatter.format(1,2,3))
+
+1-one 2-Two 3Three
+
+3.to print the formatted string we need to suffix the string with "f" and need to substitute the values with  {}.
+
+name=input("Enter the name? ")
+color=input("Enter the fav color? ")
+print(f"{name} likes {color}")
+
+//If we want to print the string ignoring the special characters like \n,\t. use raw string:
+print(r'c:\docs\new') //c:\docs\new
+
+to print the string in multiple lines:
+
+email="""To xxxx,
+
+We have resolved your support ticket.
+Please let us know if you have any more questions.
+
+Thanks,
+Support Team.
+"""
+
+print(email)
+
+//output:
+To xxxx,
+
+We have resolved your support ticket.
+Please let us know if you have any more questions.
+
+Thanks,
+Support Team.
+
+to assign the variable in multi lines:
+a=1+2+3+ \
+   4+ \
+   5
+print(a)
+
+to assign the list,dict,() it can be assigned in multiple lines without "\" character.
+
+to assigne multiple statements in a single line:
+a = 10; b = 20; c = b + a 
+  
+print(a); print(b); print(c) 
+
+//All the python files should be saved with .py extension.
+//All the python programs are portable.
+//python supports different programming paradigms like procedure and object.
+//python is easily extensible with other programming languages.
+ex:python can be easily integrated with the java called "Jython"
+//we can execute the python files using py extension as app.py (if the file is saved as "app").
+	python app.py
+//All the lines in the python are executed line by line from top to bottom in order.
+//the python interpretor takes the python program as input and interprets each line in the python program into the computer understandable format.
+//python gives the repl which is used to immediately execute the script and to see the output without ide.
+to get into the python shell:
+go to cmd
+python and hit enter
+
+split:
+the split function used to split the string using the delimiter and will return the list of the spilted literal back.
+
+s="1,26,684449,Kiran Kumar Seeram"
+for item in s.split(","):
+           print(item)
+
+print(s.split(","))
+
+output:
+1
+26
+684449
+Kiran Kumar Seeram
+['1', '26', '684449', 'Kiran Kumar Seeram']
+
+isdigit:
+this function is used to check whether the value entered is integer or not.
+
+s=input("Enter the number? ")
+if s.isdigit():
+           print(f"{s} is a digit")
+else:
+           print(f"{s} is not a digit")
+
+index:
+to get the index of the string:
+
+str="Abcabc"
+print(str.index("ab")) //3
+
+strip:
+the strip function is used to trim the trailing or leading spaces of the string.
+
+str=" hello "
+print(str.strip()) //hello
+
+for the leading or trailing spaces we can use lstrip() and rstrip() functions.
+
+padding:
+this is used to pad the string at the trailing or leading of the value:
+
+m=7
+print(str(m).rjust(2,"0")) //07
+
+similarly we can use ljust() method.
+
+join:
+we can use this function to append the string in between the values:
+
+year=2013
+month=7
+date=25
+
+print("-".join([str(year),str(month).rjust(2,"0"),str(date).rjust(2,"0")])) //2013-07-25
+
+splitlines:
+str="one\ntwo\nthree"
+print(str.splitlines())
+
+(or)
+print(str.split("\n"))
+
+isalnum:
+used to check whether the string is alpha numeric or not:
+
+str="1a"
+print(str.isalnum()) //True
+
+str1="1:a"
+print(str1.isalnum()) //False //this is false because the string contains the special characters ":"
+
+repl-- read evaluate print loop.
+
+//if we want to see the output or make use of the previous output in the current line then make use of "_".
+
+//python by default gives the built in idle for the development purposes.
+
+//to print the character multiple times:
+print("*" * 5)
+*****
+* will be printed 5 times
+
+operators:
+1.in python the to find the powerof an number it is represented using **
+print(10 ** 3)
+
+1000
+
+2.if we divide the number we will get the floating number as the value.
+print(10 / 3)
+3.3333333
+
+//to get the integer value:
+print(10 // 3)
+3
+
+short hand operators:
+x+=5 // x=x+5
+
+//if we want to initialize the mutliple variables at the same time.
+a,b=5,6
+
+//if we want to get the negative number:
+ n=10
+-n //-10
+n //10
+n=-n
+n // -10
+
+
+Operator precedence:
+**,*,/,%,//,+,-
+
+Python strings:
+//we can access the element in the python string in bidirectional way:
+the left to right index starts with 0 and right to left starts with the -1.
+
+name='kiran'
+      01234
+    -5-4-3-2-1
+
+//to get an element in the string:
+print(name[0]) //k
+print(name[-1]) //n
+
+//to get the substring of a specific string:
+print(name[0:10]) //prints the full name.
+print(name[:10])  //prints the full name.
+print(name[0:3]) //prints the 'kir'
+
+//to copy one string to another:
+name='kiran'
+another_name=name
+
+or 
+another_name=name[:]
+
+
+//strings once assigned cannot be changed they are immutable in python.
+
+name='Kiran'
+name[0]='x' //throws error.
+
+//to get the length of the string:
+len(name)
+
+find:
+find is used to find a specific character or search string in the specified string.if the character or search string is not identified then it will return -1.
+
+print(name.find('Kir')) //0
+
+replace:
+name='Kiran'
+print(name.replace('Kiran','xxxxxx')) //xxxxxx
+
+//we can have a lookup for the python strings using the in operator:
+print('Kir' in name) //True
+
+//the in operator will return either True or False.
+
+operator precedence:
+paranthesis.
+power (or) exponention.
+multiplication/division.
+addition or subtraction.
+
+round:
+round function rounds of the decimal values.
+round(2.3) //2
+round(2.5) //2
+round(2.6) //3
+
+abs:
+returns the positive value.
+number=-2.5
+print(abs(number)) //2.5
+
+Modules:
+--------
+Python gives some inbuilt libraries to achieve some specific functionalities and these are called modules.
+to import the module:
+import Module_name
+
+import math
+
+//math has lot of functionalities.
+ceil,floor
+math.ceil(2.3) //3
+math.ceil(2.5) //3
+math.ceil(2.6) //3
+
+conditions:
+if elif
+
+if condition:
+	logic
+elif condition:
+	logic
+else :
+	logic
+
+number=1
+if number==10:
+          print('number equal to 10')
+elif number>10:
+          print('number greater than 10')
+else:
+          print('number less than 10')
+
+ternary operator:
+for i in range(1,11):
+           print(f"{i} is Even") if(i%2==0) else print(f"{i} is odd")
+
+
+logical operators:
+AND | OR | NOT
+
+== | !=
+
+a = True
+b = False
+print(('a and b is',a and b))
+print(('a or b is',a or b))
+print(('not a is',not a))
+
+break can be used to terminate the loop.
+
+//in python the while loop also contains the else block.
+//in python there is no concept of do-while loop and it can be converted to the do-while using:
+
+i = 1
+
+while True:
+    print(i)
+    i = i + 1
+    if(i > 3):
+        break
+
+List in Python:
+---------------
+A list in python is mutable.
+A list can hold any type(heterogenous) of data.
+A list can be accessed like string.
+
+name=['kiran',100]
+
+list gives several inbuilt functions:
+
+append //adds at the end of the list.
+count //gives the number of times the elements has occured in the list.
+clear
+pop //removes the last inserted element if no argument is passed. if passed removes the element in the 	specific position.
+sort
+reverse
+insert //inserts at the specific position.
+remove //removes the first found element.
+index //gets the index of the element.
+
+if we want to delete multiple elements in the list:
+del nums[2:] //deletes from the start of 2 to end.
+
+to insert multiple elements:
+nums.extend([2,4,5])
+
+we have other functions such as min,max,sum
+
+
+sort:
+str=[(1,2),(3,3),(1,4)]
+str.sort(key=lambda x:x[0])
+print(str)
+
+//sort in descending:
+str=[(1,2),(3,3),(1,4)]
+str.sort(key=lambda x:x[0],ascending=False)
+print(str)
+
+sorted:
+x = [2, 8, 1, 4, 6, 3, 7] 
+print(sorted(x))
+
+diff b/w sort and sorted is the sorted will take the iterable as the parameter.
+
+tuples:
+-------
+tuple is similar to list but is immutable.
+tuple is represented using ()
+
+tup=(1,'kiran')
+tup[1]='aaa' //throws error.
+
+//tuple is much faster than list because it is immutable.
+
+Set:
+----
+set is immutable.
+set is represented using {}
+set doesn't maintain the sequence of the elements in the way it is inserted.
+set eliminates the duplicate values.
+
+s={10,20,9,8,10}
+
+//In order to get the address of the variable we can use id.
+a=10
+id(a) //prints the address of the variable 'a'.
+
+//the union,intersection,difference are available on the sets.
+//if we want to have the above operations on list we need to convert the list object to set.
+
+//to convert from the list to set:
+lst=[1,2,3,1]
+s=set(lst)
+print(s)
+
+datatypes in python:
+1.None
+2.Numeric - int,bool,complex,float
+3.Sequence - List,Set,Tuple,string,Range
+4.Dictionary
+
+//the reason of bool in the numeric type is because of it will return the integer types.
+>>> int(True)
+1
+>>> int(False)
+0
+
+//There is no concept of character in python.even the character is treated as the string.
+
+//if we want to see the list of numbers we can use the range.
+range(10) // range(0,10)
+range(1,10) //range(1,10) start and end, end is exclusive.
+range(1,10,2) //numbers between 1 to 10 with the step of 2.
+
+dictionary is used to store the key value pairs.we can get the value using the key.
+dictionary is represented using {}.
+
+d={'kiran':100,'aaa':89,'bbb':86}
+
+//to get the keys:
+d.keys()
+
+//to get the values:
+d.values()
+
+to get the value for the specific key:
+d['kiran'] // 100
+d.get('kiran') // 100
+
+//we can create the empty set using:
+s=set({})
+print(type(s))
+
+(or)
+if we create the set using s={} //it will create the dictionary type.
+
+
+dictionary operations:
+S = str(input())
+
+def count_snacks(s):
+           items_lst=s.split(',')
+           items_map_lst=list(map(lambda x:(x,1),items_lst))
+           items_dic=grouped(items_map_lst)
+           items_dic_sorted=(sorted(items_dic.items(),key=lambda x: x[1],reverse=True))
+           return items_dic_sorted[0][0].lstrip()+":"+str(items_dic_sorted[0][1])
+           
+def grouped(lst):
+           dic={}
+           for item in lst:
+                      stripelement=item[0].strip()
+                      if stripelement in dic:
+                                 dic[stripelement]+=1
+                      else:
+                                 dic.update({stripelement:1})
+           return dic
+  
+print(count_snacks(S))
+
+
+//we can convert the numbers in one system to another system:
+1.binary //bin(10)
+2.octal //oct(10)
+3.hexadecimal //hex(10)
+
+swapping two variables:
+>>> a,b=5,6
+>>> a,b=b,a
+>>> print(a)
+6
+>>> print(b)
+5
+
+//the swapping can be done in the python without third variable.
+
+import:
+if we want to use some external libraries:
+
+import math
+
+to use the functionality:
+math.sqrt(25)
+
+if we dont want to use the full name while accessing the functions we can use alias:
+import math as m
+
+m.sqrt(25)
+
+if we dont want to include all the functions in that specific library then we can import specific functions using:
+
+from math import sqrt,pow
+
+sqrt(25)
+
+//eval is used to evaluate the expression:
+eval('2+3+5') //10
+
+this is mainly used for executing the expression that are passed from the client.
+
+//if we want to pass the arguments while executing the application itself we can pass the Command line arguments using argv:
+
+import sys
+x=int(sys.argv[1])
+y=int(sys.argv[2])
+print(x+y)
+
+//argv starts taking the arguments from the 1st element
+
+python app.py 10 20
+
+0--app.py //fileName
+1 //10
+2 //20
+
+//argv is coming from the sys module.
+
+
+Parameters,unpacking,Variables:
+from sys import argv
+
+first,second=argv
+
+print(f"first :{first}")
+print(f"second :{second}")
+
+//It will automatically unpacks and assigns the parameter values to the variables.
+
+
+//It is always better to use the functions rather than specifying the expressions.because all the exception and logic building will be done in the methods and we have to just use it.
+
+import math
+num=int(input("enter the number? "))
+print(math.pow(num,3))
+
+Arrays:
+arrays are used to hold the similar type of data.
+unlike the other programming languages, we can add the additional elements into the array.
+
+if we want to create the array we need to import the library:
+
+import array
+vals = array.array('i',[1,2,3,4])
+print(vals)
+
+//first parameter,we need to provide the type code.(which type it holds the data)
+//second parameter,we need to provide the values.
+
+print(vals.buffer_info()) //(2904292561008, 4) //prints the address and the number of elements.
+print(vals.typecode) //prints the type of the data that the array is holding.
+
+//to print the values in the array:
+for i in vals:
+          print(i)
+
+//to copy one array to another:
+new_arr=array.array(vals.typecode,(a for a in vals))
+print(new_arr)
+
+//If we want to import all the functionality from the module to the current program then we can use:
+from array import *
+
+//to get the input elements from the user and insert into the array:
+
+from array import *
+vals=array('i',[])
+
+num=int(input("Enter the number of elements in the array:? "))
+for i in range(num):
+          ele=int(input("enter the element into the array? "))
+          vals.append(ele)
+else:
+          print("you created an empty array")
+print(vals)
+
+//we will not be able to create the multiple dimensional arrays with the array module so we have to install the package called numpy inorder to work with the multi-dimensional arrays.
+
+//we have lot of inbuilt packages available for python and we need to install those libraries into the current system using python package installer (pip3)
+
+pip3 list // will give the list of packages installed
+
+to install the package:
+pip3 install package_name
+
+to uninstall the package:
+pip3 uninstall package_name
+
+to install numpy:
+pip3 install numpy
+
+from numpy import *
+
+vals=array([1,2,3,4,5])
+
+print(vals)
+
+//we dont have to provide the type while creating the array with numpy package.
+//however if we want to provide the type:
+
+from numpy import *
+
+vals=array([1,2,3,4,5],int)
+
+print(vals)
+
+ways of creating the array in the numpy:
+1.array
+2.linspace
+3.logspace
+4.arange
+5.zeros
+6.ones
+
+linspace:
+linspace will take the start and end, it will take the value which will break the elements from start to end into equal parts.
+
+linspace(1,16,16)
+
+from numpy import *
+
+vals=linspace(1,16,16,int)
+print(vals)
+
+//the output will be in the floating point because the values are divided by the retstep and hence the floating point.
+
+logspace:
+logspace will take the log of the value and divide.
+
+arange:
+arange will take the step and gives the elements.
+
+from numpy import *
+
+vals=arange(1,10,2)
+print(vals)
+
+zeros:
+zeros will take the input of number of elements and by default it will assign the value zero to the element.
+
+ones:
+similar to zeros but the default value will be ones.
+
+from numpy import *
+
+vals=zeros(5)
+print(vals)
+
+//numpy provides the several in-built functions that can be used with the arrays:
+
+from numpy import *
+
+vals=array([1,2,3,4,5])
+print(vals+5)
+
+//adds the each element in the array by 5.
+
+//adding two arrays:
+arr1=array([1,2,3,4,5])
+arr2=array([5,6,7,8,9])
+
+arr3=arr1+arr2 //adds the two arrays.
+print(arr3)
+
+there are some in-built functions like : sum,max,min,sin,cos
+
+//two concatenate two arrays:
+arr1=array([1,2,3,4,5])
+arr2=array([5,6,7,8,9])
+
+print(concatenate([arr1,arr2]))
+
+array copying:
+--------------
+arr1=array([1,2,3,4,5])
+arr2=arr1
+
+the two arays arr1,arr2 are pointing to the same memory reference. Hence if we change the value in the one element that will effect the value in the other array as well.
+id(arr1) and id(arr2) will give the same memory location.
+
+there are two ways of copying the array:
+1.shallow
+2.Deep
+
+shallow:
+-------
+the memory location of the arrays is different but the change in one array will be triggered in the other array.
+
+arr1=array([1,2,3,4,5])
+arr2=arr1.view()
+
+deep:
+-----
+the memory locations of the array is different and changes in one array wont trigger the value changes in the another.
+
+arr1=array([1,2,3,4,5])
+arr2=arr1.copy()
+
+creating multi-dimensional array:
+from numpy import *
+
+vals=array([
+    [1,2,3],
+    [4,5,6]
+])
+
+print(vals)
+
+from numpy import *
+
+arr1=array([
+    [1,2,3],
+    [4,5,6]
+])
+
+print(arr1.dtype) // int //array type.
+print(arr1.ndim) //2  //dimension of array
+print(arr1.size) //6 //array size
+print(arr1.shape) //(2,3) //shape of the array.
+arr2=arr1.flatten() //flattens as a single dimensional array
+
+arr3=arr2.reshape(3,2) //creates a new matrix with 3 rows and 2 columns.
+
+//Inorder to work with the matrix, we need to use the matrix functions.
+
+from numpy import *
+
+arr1=array([
+    [1,2,3],
+    [4,5,6]
+])
+
+m=matrix(arr1)
+
+print(m)
+
+m1=matrix('1 2 3 4;5 6 7 8') //rows are seperated by ;
+
+//to print the diagonal elements:
+from numpy import *
+
+arr1=array([
+    [1,2,3],
+    [4,5,6],
+    [7,8,9]
+])
+
+m1=matrix(arr1)
+print(m1)
+print(diagonal(m1))
+
+//we can perform additions,subractions,multiplications using the matrix:
+from numpy import *
+
+arr1=array([
+    [1,2,3],
+    [4,5,6],
+    [7,8,9]
+])
+
+m1=matrix(arr1)
+m2=matrix(arr1)
+m3=m1*m2
+print(m3)
+
+functions in python:
+def add(a,b):
+    print(a+b)
+
+add(4,6)
+
+//function returning the value:
+def calculate(a,b):
+    return a+b
+
+result=calculate(4,6)
+print(result)
+
+//function returning multiple values:
+def calculate(a,b):
+    return a+b,a-b
+
+add,sub=calculate(4,6)
+print(add,sub)
+
+//function taking variable length of arguments:
+def calculate(a,*b):
+    return a+sum(b)
+
+add=calculate(1,2,3,4,5)
+print(add)
+
+function taking one function as a parameter:
+
+import math
+
+def add(start,end,func):
+           sum=0
+           for i in range(start,end+1):
+                      sum+=func(i)
+           return sum
+
+individual=lambda i:i
+
+squares=lambda i:math.pow(i,2)
+
+cubes=lambda i:math.pow(i,3)
+
+print(add(1,10,individual))
+print(add(1,10,squares))
+print(add(1,10,cubes))
+
+//function with keyworded variable length arguments:
+it is used to pass the variable length data with named parameters and should be represented using the **.
+def person(name,**details):
+    print(name)
+    print(details)
+
+//the named parameters is treated as the dictionary of the key,value pairs.
+
+person('kiran',age=26,city='vja',workplace="hyd")
+
+output:
+kiran
+{'age': 26, 'city': 'vja', 'workplace': 'hyd'}
+
+(or)
+
+def person(name,**details):
+   print(name)
+   for i,j in details.items():
+       print(i,j)
+
+person('kiran',age=26,city='vja',workplace="hyd")
+
+output:
+kiran
+age 26
+city vja
+workplace hyd
+
+//when we pass the actual arguments to the function it is neither the call by value and neither the call by reference for the variables.it will allocate the same memory address for the same values but if the values are getting changed it will allocate the new memory address.
+
+local vs global variable:
+//if we have two variables with same name but in different scopes:
+1.with in the function
+2.global scope.
+changing the value in local scope won't effect the global variable.
+
+ex:
+a=10
+
+def fun():
+    a=15
+    print(a)
+fun()
+print(a)
+
+//15 10
+
+if we want to change the global variable in the functions:
+a=10
+
+def fun():
+    global a
+    a=15
+    print(a)
+fun()
+print(a)
+
+//15 15
+
+if we want to change the global variable in the function and create the new variable as of the name of same global variable:
+a=10
+
+def fun():
+    globals()['a']=15
+    a=20
+    print(a)
+fun()
+print(a)
+
+difference between global and globals:
+global and globals is used to update the global variable in the function/local scope. but if we want to create the new variable with the same name of global variable then we can use the globals.
+
+fibonocci and factorial programs:
+def fib(n):
+    a=0
+    b=1
+    print(a)
+    print(b)
+    for i in range(3,n+1):
+        sum=a+b
+        print(sum)
+        a,b=b,sum
+
+fib(10)
+
+def fact(n):
+    sum=1
+    for i in range(2,n+1):
+        sum*=i
+    print(sum)
+
+fact(5)
+
+//In python we have the maxrecursionlimit of 1000.and this property is set in the sys module.
+import sys
+
+print(sys.getrecursionlimit())
+sys.setrecursionlimit(2000)
+
+
+factorial using recursive functions:
+def recfib(n):
+    if n==0:
+        return 1
+    else:
+        return n*recfib(n-1)
+
+fact=recfib(5)
+print(fact)
+
+to print the details or comments of what the function doc:
+
+def add(x,y):
+           """ x should be an integer.
+               y should be an integer.
+               returns the value that is an integer type."""
+           return x+y
+
+print(add(1,2))
+print(add.__doc__) //__doc__ is used to print the function documentation.
+
+output:
+3
+ x should be an integer.
+               y should be an integer.
+               returns the value that is an integer type.
+
+
+Anonymous functions:
+function without name is called the anonymous functions.
+add=lambda a,b:a+b
+
+print(add(1,2))
+
+there are some inbuilt functions available in python:
+1.map
+2.reduce
+3.filter
+
+map:
+lst=[1,2,3,4]
+
+print(lst)
+
+print(list(map(lambda x:x+1,lst)))
+
+filter:
+lst=[1,2,3,4]
+
+print(lst)
+
+print(list(filter(lambda x:x%2==0,lst)))
+
+reduce:
+the reduce funtionality is available in the seperate module called as:functools
+
+from functools import reduce
+
+lst=[1,2,3,4,5]
+
+print(lst)
+print(reduce(lambda a,b:a+b,lst))
+
+python decorators:
+the python decorators are used to modify the existing functionality business logic without touching the actual code.
+
+def div(a,b):
+          print(a/b)
+
+div(5,10)
+
+
+def smartDiv(func):
+          def inner(a,b):
+                    if a<b:
+                              a,b=b,a
+                    return func(a,b)
+          return inner
+
+div1=smartDiv(div)
+div1(5,10)
+
+//in smart div it is internally calling the actual business logic but the actual code itself is not changed.
+
+modules:
+modules help in creating the helpers. they are used to seggregate the code and they are useful in reusing the code.
+
+calc.py
+-------
+def div(a,b):
+          return a/b
+def sum(a,b):
+          return a+b
+def diff(a,b):
+          return a-b
+
+app.py:
+------
+from calc import div
+
+val=div(10,5)
+print(val)
+
+//if we want to import all of the code:
+from calc import *
+
+special variables in python:
+----------------------------
+in python there is a special variable called __name__
+
+demo.py:
+print("demo")
+
+calc.py
+import demo
+print("calc")
+
+//it will call both the demo and calc in calc.py as demo is also imported.
+
+in order to avoid:
+
+demo.py:
+
+def main():
+	print("demo")
+
+if __name__="__main__":
+	main()
+
+calc.py:
+import demo
+print("calc")
+
+//It will call only the calc.
+
+object oriented programming in python:
+everything is treated as an object in python.
+
+to define a class:
+
+class Employee:
+          def fun(self):
+                    print("Employee fun method")
+
+to call the method in class there are two ways:
+
+
+1.emp=Employee()
+emp.fun()
+
+2.emp1=Employee()
+Employee.fun(emp1)
+
+//self is treated as an object instance.
+
+//in order to initialize the variables at run time for a class we have the __init__ method.
+//it will be automatically called when the object is created each and every time.
+
+
+class Employee:
+          def __init__(self,eno,ename):
+                    print("Employee Init Method")
+                    self.eno=eno
+                    self.ename=ename
+          def show(self):
+                    print(self.eno,self.ename)
+         
+
+emp1=Employee(1,'Kiran')
+emp1.show()
+
+
+//output:
+Employee Init Method
+1 Kiran
+
+objects comparision:
+class Employee:
+          def __init__(self,eno,ename,age):
+                    self.eno=eno
+                    self.ename=ename
+                    self.age=age
+          def show(self):
+                    print(self.eno,self.ename)
+          def compare(self,other):
+                    if self.age == other.age:
+                              return True
+                    else:
+                              return False
+         
+
+emp1=Employee(1,'Kiran',26)
+emp2=Employee(1,'xxx',26)
+print(emp1.compare(emp2))
+
+types of variables:
+there are two types of variables in class:
+1.instance variables //these are specific to an object.
+2.static or class variables    //these are not changed on per object basis.
+
+class Employee:
+          org='abc'
+          def __init__(self,eno,ename,age):
+                    self.eno=eno
+                    self.ename=ename
+                    self.age=age
+          def show(self):
+                    print(self.eno,self.ename,self.org)
+          
+         
+
+emp1=Employee(1,'Kiran',26)
+emp1.show()
+
+//eno,ename,age are instance and org is an static or class variable.
+//to access the static variables we can access them using the class Name.
+print(Employee.org) //abc
+
+there are three types of methods in python for class:
+1.instance methods
+2.class methods
+3.static methods
+
+instance methods:
+in the above example show method is an instance method.
+all the mehtods that has an argument with self are treated as instance methods.
+
+class methods:
+the class methods are those which are used to access the class level variables.
+
+class Employee:
+          org='abc'
+          def __init__(self,eno,ename,age):
+                    self.eno=eno
+                    self.ename=ename
+                    self.age=age
+          def show(self):
+                    print(self.eno,self.ename,self.org)
+          @classmethod
+          def info(cls):
+                    print(cls.org)
+          
+         
+
+emp1=Employee(1,'Kiran',26)
+emp1.show()
+Employee.info()
+
+//info is the class method and the class level methods are identified using the cls argument.
+//all the classmethods are to be decorated with the @classmethod tag.
+
+static methods:
+the static methods are those which doesn't have to do with the attributes.
+
+class Employee:
+          org='abc'
+          def __init__(self,eno,ename,age):
+                    self.eno=eno
+                    self.ename=ename
+                    self.age=age
+          @staticmethod
+          def message():
+                    print("Employee working times are between 9 to 5")
+          
+emp1=Employee(1,'Kiran',26)
+Employee.message()
+//all the static mehtods are decorated with the "@staticmethod" tag.
+
+//we can access the variables directly using instance:
+
+class Employee:
+          org='abc'
+          def __init__(self,eno,ename,age):
+                    self.eno=eno
+                    self.ename=ename
+                    self.age=age
+          @staticmethod
+          def message():
+                    print("Employee working times are between 9 to 5")
+          
+emp1=Employee(1,'Kiran',26)
+Employee.message()
+
+//age is directly acessed using the instance variable.
+//to have the more control over the variables we can have the getters and setters.
+
+class Employee:
+          org='abc'
+          def __init__(self,eno,ename,age):
+                    self.eno=eno
+                    self.ename=ename
+                    self.age=age
+          def show(self):
+                    print(self.eno,self.ename)
+          def update(self,value):
+                    self.age=value
+          def print_age(self):
+                    print(self.age)
+          
+emp1=Employee(1,'Kiran',26)
+emp1.update(15)
+emp1.print_age()
+
+//print_age is the getter or accessor
+//update is the setter or mutator
+
+inner class in python:
+A class with in the class is defined as the inner class:
+
+class Person:
+           def __init__(self):
+                      self.lap=self.Laptop()
+           class Laptop:
+                      def config(self):
+                                 print("lap config")
+           
+
+per=Person()
+per.lap.config()
+
+inheritance:
+class A:
+           def show(self):
+                      print("class A show")
+
+class B:
+           def show(self):
+                      print("class B show")
+class C(A,B):
+           pass
+
+c=C()
+c.show() // class A show
+
+//when there is a multiple inheritance in which the bases classes are having the methods with the same name,python uses the Method Resolution Order(MRO) in which it will call the methods from the left to right.
+
+hence in the above the "A" class method will be called.
+
+
+inheritance with constructor:
+class A:
+           def __init__(self):
+                      print("class A constructor")
+           def show(self):
+                      print("class A show")
+
+class B(A):
+           def __init__(self):
+                      super().__init__() //used to call parent class constructor.
+                      print("class B constructor")
+           def show(self):
+                      print("class B show")
+#class C(A,B):
+#           pass
+
+b=B()
+b.show()
+
+while creating the object for the child class python will not call the parent class constructor it will call the child constructor only.if the constructor is not available for the child class then it will call the parent class constructor.
+//inorder to call the parent class constructor from the child class we will use the super keyword.
+//in mutliple inheritance it will call the constructor according to the MRO.
+
+
+operator overloading:
+every python program will provide some inbuilt functionality with the magic functions:
+say, __add__ is the magic function that is present inside the integer,bool and every other type to add two values.
+
+similarly, if we want to provide the same functionality to add two student objects:
+//there is a special function called __str__ in which it is used to display the object string instead of printing the address.
+
+class Student:
+           def __init__(self,m1,m2):
+                      self.m1=m1
+                      self.m2=m2
+           def __add__(self,other):
+                      stu=Student(0,0)
+                      stu.m1=self.m1+other.m1
+                      stu.m2=self.m2+other.m2
+                      return stu
+           def __str__(self):
+                      return f"({self.m1},{self.m2})"
+
+
+s1=Student(1,2)
+s2=Student(2,3)
+s3=s1+s2
+print(s3)
+
+method overloading:
+if we want to write the multiple functions with the same name with variable arguments.
+in python we cant write multiple functions for the same method.
+
+class Student:
+           def show(self,m1=None,m2=None):
+                      if m1==None and m2==None:
+                                 print("Empty show")
+                      elif m1==None:
+                                 print("m2 show")
+                      elif m2==None:
+                                 print("m1 show")
+                      else:
+                                 print("m1 and m2 show")
+                      
+s1=Student()
+s1.show(1,2)
+
+method overriding:
+
+class A:
+           def show(self):
+                      print("class A show")
+
+class B(A):
+           def show(self):
+                      print("class B show")
+
+a=A()
+a.show() #A show
+b=B()
+b.show() #B show
+
+//place holder for iterator and generator:
+
+
+exception handling:
+
+a=10
+b=0
+
+try:
+           print("resource opened")
+           print(a/b)
+           k=int(input("enter the num? "))
+           print(k)
+except ValueError:
+           print("Value conversion error")
+except ZeroDivisionError:
+           print("Zero division error")
+except Exception as ex:
+           print("Exception occured",ex)
+finally:
+           print("resource closed")
+
+
+if there are multiple exceptions that needs to be handled in the single go in the except block, can be implemented by using the following code:
+
+except (RuntimeError,TypeError,NameError):
+	print("not an exception")
+
+
+multithreading in python:
+if we want to run the multiple programs simultaneously without interrupting the other processes we can go for multithreading.
+
+every python application that is currently under execution will have its own default thread known as "main" thread.
+
+import threading
+from time import *
+class Hello(threading.Thread):
+           def run(self):
+                      for i in range(10):
+                                 print("Hello")
+                                 sleep(0.2) # used to sleep the thread for the specific interval.
+
+
+class Hi(threading.Thread):
+           def run(self):
+                      for i in range(10):
+                                 print("Hi")
+
+t1=Hello()
+t2=Hi()
+t1.start()
+t2.start()
+
+
+t1.join() 
+t2.join()
+
+print("main thread")
+
+
+//in the above program there are 3 threads:
+1.t1
+2.t2
+3.main thread
+
+while the t1 and t2 are running there own processes the main thread will not wait for the printing of the main thread statement.
+In order to print the main thread statements we need to wait until the t1,t2 processes should be completed and will be implemented using the:
+t1.join() 
+t2.join()
+
+//python is both compiled and the interpreted language, whatever the code that is written will be compiled in to the machine understandable format and will interpret the each line.
+//All this will be done behind the scenes.
+
+
+FileHandling in python:
+
+
+
+
+
+
+
+
+doubts:
+--------
+1.how to suffix the variables r,f(both) in python while printing:
+2.place holder for iterator and generator
+3.file handling
+4.list operations(update function) in learning py.
+5.
+
+
+
+
+
+
+
+

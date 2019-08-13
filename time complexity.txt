@@ -1,0 +1,8 @@
+Time complexity:
+Time complexity will tell you the time it will take to run a function grows as the input of the function grows.
+
+
+
+Dynamic programming:
+The property where it has a recursive definiton is called the optimal substructure.
+

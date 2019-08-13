@@ -1,0 +1,192 @@
+command to start hbase:
+
+start-hbase.sh
+
+launch hbase shell:
+hbase shell
+
+to get the list of all the tables:
+list
+
+creating the table in hbase:
+create 'mytable', 'cf'
+
+insert the record into the hbase table:
+put 'mytable', 'first', 'cf:message', 'hello HBase'
+
+to insert integer,float:
+
+put 'mytable', 'second', 'cf:foo', 0x0
+
+put 'mytable', 'third', 'cf:bar', 3.14159
+
+Reading the data from the hbase:
+get 'mytable', 'first'
+
+//hbase can also store the multiple versions of the data:default(3) and this value can be configurable.
+//but at the read time the latest version of the data is retrieved.
+
+to get all the records from the table:
+scan 'mytable'
+
+when we retrieve teh data using the scan the data is ordered according to the rowkey of the table.
+
+to get the advanced details of the hbase table:
+
+describe 'users'
+DESCRIPTION ENABLED
+{NAME => 'users', FAMILIES => [{NAME => 'info', true
+BLOOMFILTER => 'NONE', REPLICATION_SCOPE => '0
+', COMPRESSION => 'NONE', VERSIONS => '3', TTL
+=> '2147483647', BLOCKSIZE => '65536', IN_MEMOR
+Y => 'false', BLOCKCACHE => 'true'}]}
+
+//the configuration object is used to connect to the hbase server if it is left empty, then it will by default connect to the localhost.
+
+Configuration myConf = HBaseConfiguration.create();
+//HTableInterface usersTable = new HTable(myConf, "users");
+
+myConf.set("parameter_name", "parameter_value");
+
+Connection connection = ConnectionFactory.createConnection(config);
+
+Table table = connection.getTable(TableName.valueOf("table1"));
+
+try 
+{
+   // Use the table as needed, for a single operation and a single thread
+} 
+finally
+{
+   table.close();
+   connection.close();
+}
+
+
+//Every row in an HBase table has a unique identifier called its rowkey
+//There are five primitive commands for interacting with HBase: Get, Put, Delete, Scan, and Increment
+//All data in HBase is stored as raw data in the form of a byte array, and that includes the rowkeys.
+
+Put p = new Put(Bytes.toBytes("TheRealMT"));
+p.add(Bytes.toBytes("info"),
+Bytes.toBytes("name"),
+Bytes.toBytes("Mark Twain"));
+p.add(Bytes.toBytes("info"),
+Bytes.toBytes("email"),
+Bytes.toBytes("samuel@clemens.org"));
+p.add(Bytes.toBytes("info"),
+Bytes.toBytes("password"),
+Bytes.toBytes("Langhorne"));
+
+usersTable.put(p);
+usersTable.close();
+
+//The columnQualifier or qual or column all are same in hbase terminology.
+//The cell is where HBase stores data as a value/
+
+//To determine the cell of the hbase table:
+table-->rowkey-->columnfamily-->columnidentifier
+
+//updating the data with hbase:
+
+Put p = new Put(Bytes.toBytes("TheRealMT"));
+p.add(Bytes.toBytes("info"),
+Bytes.toBytes("password"),
+Bytes.toBytes("abc123"));
+usersTable.put(p);
+
+//When a write is made, by default, it goes into two places: the write-ahead log (WAL), also referred to as the HLog, and the MemStore
+
+//The default behavior of HBase recording the write in both places is in
+order to maintain data durability. Only after the change is written to and confirmed in
+both places is the write considered complete.
+
+//The MemStore is a write buffer where HBase accumulates data in memory before a
+permanent write. Its contents are flushed to disk to form an HFile when the MemStore
+fills up. It doesn’t write to an existing HFile but instead forms a new file on every flush.
+The HFile is the underlying storage format for HBase.HFiles belong to a column family, and a column family can have multiple HFiles. But a single HFile can’t have data for multiple column families. There is one MemStore per column family.
+
+//There is a single
+WAL per HBase server, shared by all tables (and their column families) served from
+that server.
+
+we can set the write to WAL disable using the property:
+Put p = new Put();
+p.setWriteToWAL(false);
+
+//To get the data back from the hbase:
+Get g = new Get(Bytes.toBytes("TheRealMT"));
+Result r = usersTable.get(g);
+//it will return all of the data from the hbase table for the associated rowkey from all of the column families.
+
+//to retrieve the specific column:
+Get g = new Get(Bytes.toBytes("TheRealMT"));
+g.addColumn(
+Bytes.toBytes("info"),
+Bytes.toBytes("password"));
+Result r = usersTable.get(g);
+
+//to retrieve the specific value:
+Get g = new Get(Bytes.toBytes("TheRealMT"));
+g.addFamily(Bytes.toBytes("info"));
+byte[] b = r.getValue(
+Bytes.toBytes("info"),
+Bytes.toBytes("email"));
+String email = Bytes.toString(b);
+
+Deleting the row in hbase:
+Delete d = new Delete(Bytes.toBytes("TheRealMT"));
+usersTable.delete(d);
+
+deleting the row with column specified:
+
+Delete d = new Delete(Bytes.toBytes("TheRealMT"));
+d.deleteColumns(
+Bytes.toBytes("info"),
+Bytes.toBytes("email"));
+usersTable.delete(d);
+
+Compactions:
+The Delete command doesn’t delete the value immediately. Instead, it marks the
+record for deletion. That is, a new “tombstone” record is written for that value, marking
+it as deleted. The tombstone is used to indicate that the deleted value should no
+longer be included in Get or Scan results. Because HFiles are immutable, it’s not until
+a major compaction runs that these tombstone records are reconciled and space is truly
+recovered from deleted records.
+
+Compactions come in two flavors: minor and major.
+
+A minor compaction folds HFiles together,
+creating a larger HFile from multiple smaller HFiles.
+
+when a compaction done on overall HFiles in the region server it is called as MajorCompaction.
+
+Major compactions are the only chance HBase has to clean up deleted records.\
+Resolving a delete requires removing
+both the deleted record and the deletion marker.
+
+//To get the versioned data:
+List<KeyValue> passwords = r.getColumn(
+Bytes.toBytes("info"),
+Bytes.toBytes("password"));
+b = passwords.get(0).getValue();
+String currentPasswd = Bytes.toString(b); // "abc123"
+b = passwords.get(1).getValue();
+String prevPasswd = Bytes.toString(b); // "Langhorne"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

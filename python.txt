@@ -1,0 +1,188 @@
+Python:
+-------
+Python is a general purpose high level programming language.
+It is invented by guido van russom.
+
+General purpose in the sense it is used to develop the scripting,web,desktop,data analytic applications.
+
+Features of python:
+-------------------
+1.Simple and easy to learn
+2.Free ware and opensource
+3.high level programming language
+4.platform independent
+5.portability
+6.Dynamically typed
+7.Both procedure oriented and object oriented
+8.Interpreted
+9.Extensible:If you have 1 lakh records in java we can extend that functionality in python.
+10.Embedded: we can embed the python code in other programming languages.
+11.Extensive library
+
+
+Limitations:
+------------
+1.Performance (because of interpretation)
+2.Mobile applications
+
+Flavors of Python:
+------------------
+1.Cpython
+2.Jython or JPython
+3.IronPython(for .net apps)
+4.Pypy(used to improve performance by JIT)
+5.RubyPython
+6.AnacondaPython (used to handle large data)
+7.Stackless(python for concurrency)
+
+Python Identifiers:
+-------------------
+Identifiers:
+-----------
+Identifiers are used to uniquely identify a variable or an object.
+
+Rules for defining a Identifier in python:
+------------------------------------------
+1.alphabet symbols(both upper case and lower case)
+  digits(0 to 9)
+  underscore(_)
+  $ is not allowed
+
+2.identifiers should not start with digit
+
+3.identifiers are case sensitive which means
+   total =10
+   TOTAL=20 are treated differently
+
+4.identifiers must not be reserved keywords.
+5.Identifiers doesn't have the length limit.
+
+Tips:
+----
+if any identifier starts with _ ==>private
+if any identifier starts with __ ==>strongly private
+if any identifier starts with __ some name and __ ==>language defined specific identifier
+ex: __main__
+
+Reserved words:
+---------------
+Reserved words are keywords that are intended for some specific meaning or functionality.
+In python there are 33 reserved keywords.They are:
+
+True,False,None
+and,or,not,is
+if,else,elif
+while,for,break,continue,return,in,yield
+try,except,finally,raise,assert
+import,from,as,class,def,pass,global,nonlocal,lambda,del,with
+
+To get all the keywords in python:
+import keyword
+keyword.kwlist
+
+DataTypes:
+----------
+int
+float
+complex
+bool
+str
+bytes
+bytearray
+range
+list
+tuple
+set
+frozenset
+dict
+None
+
+inbuilt functions in python:
+----------------------------
+print()
+type() -- to get the type of the variable
+id()-- to find the address of the object.
+
+//In python everything is an object even the functions and variables are treated as the objects.
+
+//In python the data types doesn't have any size or limit because each and every thing is treated as the object. And every object size is dynamically fixed at runtime.
+
+//Internaly at memory level python treats the True as 1 and False as 0
+
+//we  can use either the single or double quotes to represent the string in python.
+
+//If we want to represent the string in multiline we need to represent it by using the triple double quotes or triple single quotes.
+
+s="""kiran
+kumar
+seeram"""
+
+//In python for all the collection types(including the string) there are two types of indexes are maintained that is the positive index from left to right and negative index from right to left.
+
+Slice:
+-----
+Slice is used to get the substring from the given string
+
+syntax: s[begin:end] -- will fetch the string from begin till end-1
+
+s='kiran'
+
+s[1:3] ==> ir
+
+// if we are not specifying the end it will take the end of the string.
+s[1:]==> iran
+
+// if we are not specifying the start it will take the starting of the string
+s[:2]==> ki
+
+//if we don't specify the begin and end it will print the full string
+s[:]==>kiran
+
+//If we want the step then:
+s[Begin:end:step]
+
+//If we are accessing the element in the string by the index that is out of range we will get the index Error. However this kind of errors will not occur for the slice.
+
+s[11] ==>index error
+
+s[1:11] ==> prints the string from 1 to end of the string
+
+// Repeat operator:
+If we want to repeat the string we can use *
+
+s*2 ==> kirankiran
+
+// to print the length of the string
+
+len(s) ==>5
+
+Type casting and type coersion:
+-------------------------------
+It is used to convert the one type to another type:
+
+Below are the functions used to convert from one type to another:
+
+int()
+float()
+bool()
+str()
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
