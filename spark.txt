@@ -1,0 +1,1062 @@
+sc.uiWebUrl //to give the weburl of the spark
+
+dir(sc) //to get the available attributes or methods in the variable.
+
+basepath="/root/Desktop/user_repo/workspace/Exercises/data/AdventureWorks/AdventureWorks_RDD/"
+
+DimEmployee_RDD=sc.textFile(basepath+"DimEmployee.csv")
+DimProduct_RDD=sc.textFile(basepath+"DimProduct.csv")
+FactResellerSales_RDD=sc.textFile(basepath+"FactResellerSales.csv")
+
+print(DimEmployee_RDD.first())  //to get the first element in the RDD
+print(DimEmployee_RDD.collect()) //to get all the elements in the RDD
+print(DimEmployee_RDD.take(10)) //to get the specified number of elements in the RDD
+
+print(DimEmployee_RDD.name()) //used to print the name of the RDD.
+/root/Desktop/user_repo/workspace/Exercises/data/AdventureWorks/AdventureWorks_RDD/DimEmployee.csv 
+
+DimEmployee_RDD.setName("ImportEmployee_RDD")
+ImportEmployee_RDD MapPartitionsRDD[7] at textFile at NativeMethodAccessorImpl.java:0
+>>> print(DimEmployee_RDD.name())
+ImportEmployee_RDD
+
+DimEmployee_RDD.saveAsTextFile("/root/Desktop/Exercises/sample.csv") //saving to the server
+
+//there are situations where the rdd needs to be collected as python object:
+
+rdd1 = sc.parallelize([
+	('Sepal.Length', [5.1,4.9,4.7,4.6]),
+	('Sepal.Width', [3.5,3.0,3.2,3.1]),
+	('Species', ['setosa','setosa','setosa','setosa']) 
+])
+print(rdd1)
+print(rdd1.collect())
+
+//collectAsMap() will be used:
+
+dict1 = rdd1.collectAsMap()
+print(dict1)
+print(dict1['Sepal.Length'])
+print(dict1['Sepal.Width'])
+print(dict1['Species'])
+
+sort by:
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:(float(var1[0]), float(var1[1]), float(var1[2]), float(var1[3]), var1[4]))
+iris1_mod.sortBy(lambda x: x[0]).take(10)
+
+
+iris1_mod.sortBy(lambda x: x[0],ascending=False).take(10)
+//this will sort the RDD in the descending order.
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:(var1[4],[var1[0],float(var1[1]),float(var1[2]),float(var1[3])]))
+iris1_mod.sortByKey(ascending=True,keyfunc=lambda k: k).take(10)
+
+sc.parallelize(tmp2).sortByKey(True, 3, keyfunc=lambda k: k.lower()).collect()
+
+//what is the keyfunc?
+the keyfunc is used to apply the sorting on the key by using the function:
+
+>>> tmp2 = [('Mary', 1), ('had', 2), ('a', 3), ('little', 4), ('lamb', 5)]
+>>> tmp2.extend([('whose', 6), ('fleece', 7), ('was', 8), ('white', 9)])
+>>> sc.parallelize(tmp2).sortByKey(True, 3, keyfunc=lambda k: k.lower()).collect()
+[('a', 3), ('fleece', 7), ('had', 2), ('lamb', 5),...('white', 9), ('whose', 6)]
+
+//here k.lower() is the function that is applied for the sorting on the key.
+
+
+union:
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+SL = iris1_split.map(lambda var1: ['Sepal.Length',float(var1[0])])
+SW = iris1_split.map(lambda var1: ['Sepal.Width',float(var1[1])])
+PL = iris1_split.map(lambda var1: ['Petal.Length',float(var1[2])])
+PW = iris1_split.map(lambda var1: ['Petal.Width',float(var1[3])])
+CV = iris1_split.map(lambda var1: ['Species',var1[4]])
+print(SL.take(10))
+print(SW.take(10))
+print(PL.take(10))
+print(PW.take(10))
+union_data = sc.union([SL,SW,PL,PW])
+print(union_data.take(10))
+
+intersection:
+EmployeeList = sc.parallelize(['a','b','c','d','e'])
+HealthMemberShip = sc.parallelize(['d','e','f','g'])
+print(EmployeeList.intersection(HealthMemberShip).collect())
+
+join:
+location1 = sc.parallelize([('employee1',[3,1,2,5,4]),('employee2',[2,4,1,2,2])])
+location2 = sc.parallelize([('employee2',[2,1,1,1,2]),('employee1',[4,5,2,1,1])])
+join1 = location1.join(location2)
+print(join1.collect())
+
+join2:
+
+#import tables as RDD
+DimEmployee = sc.textFile("./dataset/AdventureWorks_RDD/DimEmployee.csv")
+FactResellerSales = sc.textFile("./dataset/AdventureWorks_RDD/FactResellerSales.csv")
+#split data based on delimiter
+DimEmployee = DimEmployee.map(lambda var1: var1.split(","))
+FactResellerSales = FactResellerSales.map(lambda var1: var1.split(","))
+#convert data in-terms of key-value pairs where the key is the column to be joined
+DimEmployee = DimEmployee.map(lambda var1: [var1[0],[var1[1],var1[2],var1[3]]])
+FactResellerSales = FactResellerSales.map(lambda var1: [var1[5], [var1[0], var1[1], var1[2], var1[3], var1[4], var1[5], var1[6], var1[7], float(var1[8]), float(var1[9]),float(var1[10]),float(var1[11]), float(var1[12]), float(var1[13]), float(var1[14]), float(var1[15])]])
+#perform join
+RF = FactResellerSales.join(DimEmployee)
+#print contents of joins
+RF.take(10)
+#extract first RDD values along with the key
+print(RF.map(lambda var1: (var1[0],var1[1][0])).take(4))
+
+
+using foreach loop:
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.flatMap(lambda var1:(('Sepal.Length',float(var1[0])),('Sepal.Width',float(var1[1])),('Petal.Length',float(var1[2])),('Petal.Width',float(var1[3]))))
+def fun(x): print(x)
+iris1_mod.foreach(fun)
+
+filtering the data:
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+filter1 = iris1_split.filter(lambda x: float(x[0]) > 7)
+print(filter1.collect())
+
+
+cogroup:
+p1 = sc.parallelize([("a", 1), ("b", 4)])
+p2 = sc.parallelize([("a", 2)])
+print(p1.collect())
+print(p2.collect())
+p1.cogroup(p2).collect()
+
+
+//what is the difference between cogroup and join?
+val rdd1 = sc.makeRDD(Array(("A","1"),("B","2"),("C","3")),2)
+val rdd2 = sc.makeRDD(Array(("A","a"),("C","c"),("D","d")),2)
+
+res0: Array[(String, (String, String))] = Array((A,(1,a)), (C,(3,c)))
+but when cogroup operation is applied:
+
+val rdd1 = sc.makeRDD(Array(("A","1"),("B","2"),("C","3")),2)
+val rdd2 = sc.makeRDD(Array(("A","a"),("C","c"),("D","d")),2)
+
+scala> var rdd3 = rdd1.cogroup(rdd2).collect
+res0: Array[(String, (Iterable[String], Iterable[String]))] = Array(
+(B,(CompactBuffer(2),CompactBuffer())), 
+(D,(CompactBuffer(),CompactBuffer(d))), 
+(A,(CompactBuffer(1),CompactBuffer(a))), 
+(C,(CompactBuffer(3),CompactBuffer(c)))
+)
+
+//All the entities are retrieved but the collection of values are iterable.
+//the object type is > pyspark.resultiterable.ResultIterable
+
+to view the cogroup data:
+
+[(x,tuple(map(list,y))) for x,y in p1.cogroup(p2).collect()]
+
+//if we want to cogroup the multiple RDD's we can use the groupwith:
+
+data1 = sc.parallelize([("setosa", 5), ("non-setosa", 6)])
+data2 = sc.parallelize([("setosa", 1), ("non-setosa", 4)])
+data3 = sc.parallelize([("setosa", 2)])
+data4 = sc.parallelize([("non-setosa", 7)])
+groupwith1 = data1.groupWith(data2, data3, data4).collect()
+for x,y in groupwith1:
+	(x, tuple(map(list, y)))
+
+
+count occurence by key:
+p1 = sc.parallelize([("setosa", 1), ("non-setosa", 1), ("setosa", 1)])
+print(p1.countByKey().items())
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:(var1[4],1))
+print(iris1_mod.countByKey().items())
+
+count occurence by value:
+instead of mapping the each and every individual entity to map (entity,1) and then counting the entities. we can use the countByValue function:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+print(iris1_split.map(lambda col: col[4]).countByValue().items())
+
+count:
+iris1 = sc.textFile("./dataset/iris_site.csv")
+print(iris1.count())
+
+distinct:
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda col:col[4])
+distinct1 = iris1_mod.distinct()
+print(distinct1.collect())
+
+sequence:
+range1 = sc.range(start=1,end=10,step=2)
+print(range1.collect())
+
+mapValues:
+if we want to map the values for each and every individual keys
+
+data1 = sc.parallelize([("Sepal_Length", [2,1,3,5,4]), ("Sepal_Width", [3,1,2,4,2])])
+def fun(para1): return sum(para1)
+data1.mapValues(fun).collect()
+
+****diff b/w fold and reduce?
+****diff b/we foldByKey and reduceByKey?
+
+//grouping and aggregation:
+fold:
+
+from operator import add
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda col:col[1])
+iris1_split.map(lambda col:float(col[1])).fold(0,add)
+
+
+foldByKey:
+
+from operator import add
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.flatMap(lambda var1:(('Sepal.Length',float(var1[0])),('Sepal.Width',float(var1[1])),('Petal.Length',float(var1[2])),('Petal.Width',float(var1[3]))))
+print(iris1_mod.foldByKey(0, add).collect())
+
+reduce:
+
+from operator import add
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:float(var1[0]))
+print(iris1_mod.reduce(add))
+
+
+reduceByKey:
+
+from operator import add
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.flatMap(lambda var1:(('Sepal.Length',float(var1[0])),('Sepal.Width',float(var1[1])),('Petal.Length',float(var1[2])),('Petal.Width',float(var1[3]))))
+print(iris1_mod.reduceByKey(add).collect())
+
+groupByKey:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.flatMap(lambda var1:(('Sepal.Length',float(var1[0])),('Sepal.Width',float(var1[1])),('Petal.Length',float(var1[2])),('Petal.Width',float(var1[3]))))
+print(iris1_mod.groupByKey().collect())
+
+//groupByKey will give the object iterable pyspark.resultiterable.ResultIterable collection for the grouped entities.
+
+groupByKey with mapValues as list:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.flatMap(lambda var1:(('Sepal.Length',float(var1[0])),('Sepal.Width',float(var1[1])),('Petal.Length', float(var1[2])), ('Petal.Width', float(var1[3]))))
+group1 = iris1_mod.groupByKey()
+print(group1.mapValues(list).take(2))
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.flatMap(lambda var1:(('Sepal.Length',float(var1[0])),('Sepal.Width',float(var1[1])),('Petal.Length',float(var1[2])),('Petal.Width',float(var1[3]))))
+print(iris1_mod.groupByKey().mapValues(sum).collect())
+
+min:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:float(var1[0]))
+print(iris1_mod.min())
+
+max:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:float(var1[0]))
+print(iris1_mod.max())
+
+mean:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:float(var1[0]))
+print(iris1_mod.mean())
+
+stdev:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:float(var1[0]))
+print(iris1_mod.stdev())
+
+variance:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1:float(var1[0]))
+print(iris1_mod.variance())
+
+summary of Data:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda var1: var1.split(","))
+iris1_mod = iris1_split.map(lambda var1: float(var1[0]))
+iris1_mod.stats()
+
+
+creation of spark context,sqlContext,sparkSession:
+to create the sparkSession or sqlContext we need to create the sparkContext:
+
+from pyspark import SparkContext
+from pyspark.sql import SparkSession, SQLContext
+#creating Spark Context - already discussed
+sc1 = SparkContext(master='local',appName='test1')
+#creating Spark Session
+spark1 = SparkSession(sc1)
+#creating SQL Context
+sqlContext1 = SQLContext(sc1)
+
+dataframe vs rdd:
+1.the dataframe provides much more cleaner structure to do analytics than in rdds.
+
+#importing data using Spark Session
+df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+#importing data using SQL Context
+df2 = sqlContext.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+
+print(df1)
+
+//while printing the df it will print the object with column names.
+
+iris1_df1 = spark.read.json('./dataset/iris.json')
+print(iris1_df1)
+
+dataframe creation from an RDD:
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda line: line.split(","))
+df1=spark.createDataFrame(iris1_split)
+df1.show(10)
+
+dataframe to RDD creation:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.rdd.map(tuple).take(10)
+
+displaying the dataframe:
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.show(n=5) //displays in the tabular structure
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.collect() //displays as the list of rows.
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.head(10) //displays the first 10 rows
+
+selection of rows in the dataframe:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.select("Sepal_Length","Species").show()
+
+join:
+iris1_df1 = spark.read.csv(path='./dataset/merge/iris_merge1.csv',sep=',',header=True)
+iris1_df2 = spark.read.csv(path='./dataset/merge/iris_merge2.csv',sep=',',header=True)
+iris1_df1.join(other=iris1_df2,on='ID',how='inner').show()
+
+selection after join:
+iris1_df1 = spark.read.csv(path='./dataset/merge/iris_merge1.csv',sep=',',header=True)
+iris1_df2 = spark.read.csv(path='./dataset/merge/iris_merge2.csv',sep=',',header=True)
+iris1_df1.join(other=iris1_df2,on='ID',how='inner').select(iris1_df1.Sepal_Length,iris1_df2.Petal_Length).show()
+
+join if the join condition on the two tables and the column names are different:
+iris1_df1 = spark.read.csv(path='./dataset/merge/iris_merge1.csv',sep=',',header=True)
+iris1_df2 = spark.read.csv(path='./dataset/merge/iris_merge2.csv',sep=',',header=True) 
+iris1_df1.join(other=iris1_df2,on=(iris1_df1.ID==iris1_df2.ID2),how='inner').show()
+
+union:
+iris1_df1 = spark.read.csv(path='./dataset/union/iris_union1.csv',sep=',',header=True)
+iris1_df2 = spark.read.csv(path='./dataset/union/iris_union2.csv',sep=',',header=True)
+iris1_df1.union(iris1_df2).show()
+
+print the column names:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.columns
+
+schema of the dataframe:
+iris1_df1.schema 
+StructType(List(StructField(Sepal_Length,StringType,true),StructField(Sepal_Width,StringType,true),StructField(ID,StringType,true)))
+
+name - name of the columns
+
+datatype - data type of the column
+
+nullable - boolean value defining if the column is nullable or not
+
+data types of the columns:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.dtypes
+
+conversion of RDD to the dataframe:
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda line: line.split(","))
+iris1_split = iris1_split.map(lambda var1[float(var1[0]), float(var1[1]), float(var1[2]), float(var1[3]), var1[4]])
+df1=spark.createDataFrame(iris1_split)
+df1.show()
+
+below are the problems:
+When the data frame is created from an RDD it can be observed from the below result that the Data Frame has no column header.
+In addition, when data is being imported from a csv file, there might be situations when a float column is defined as a string column. To overcome this issue, a structure needs to impose on the data to be imported.
+
+defining the schema:
+
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+iris_schema = pyspark.sql.types.StructType([
+StructField("Sepal_Length", FloatType(), True),
+StructField("Sepal_Width", FloatType(), True),
+StructField("Petal_Length", FloatType(), True),
+StructField("Petal_Width", FloatType(), True),
+StructField("Species", StringType(), True)
+])
+print(iris_schema)
+
+
+assigning the defined schema to dataframe:
+
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+
+iris_schema = pyspark.sql.types.StructType([
+StructField("Sepal_Length", FloatType(), True),
+StructField("Sepal_Width", FloatType(), True),
+StructField("Petal_Length", FloatType(), True),
+StructField("Petal_Width", FloatType(), True),
+StructField("Species", StringType(), True)
+])
+
+iris1 = sc.textFile("./dataset/iris_site.csv")
+iris1_split = iris1.map(lambda line: line.split(","))
+iris1_split = iris1_split.map(lambda var1: [float(var1[0]), float(var1[1]), float(var1[2]), float(var1[3]),var1[4]])
+
+df1=spark.createDataFrame(iris1_split,iris_schema)
+df1.show()
+
+assinging the schema with spark.read.csv:
+
+iris1=spark.read.csv(path+"iris.csv",header=True,schema=iris_schema)
+
+converting the datatype while selecting the columns:
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.dtypes
+iris1_df1.select(iris1_df1.Petal_Length.cast("float"),iris1_df1.Sepal_Length.cast("float")).show()
+
+dropping columns while display with drop:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.drop('Species').show()
+
+droping columns while display with select:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.select("Sepal_Length","Species").distinct().show()
+
+sort:
+
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+iris_schema = pyspark.sql.types.StructType([
+StructField("Sepal_Length", FloatType(), True),
+StructField("Sepal_Width", FloatType(), True),
+StructField("Petal_Length", FloatType(), True),
+StructField("Petal_Width", FloatType(), True),
+StructField("Species", StringType(), True)
+])
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True,schema=iris_schema)
+iris1_df1.sort('Petal_Length',ascending=False).show()
+
+filter:
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.select("Sepal_Length","Species").filter("Species=='virginica'").show()
+
+distinct:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.select("Species").distinct().show()
+
+distinct of count:
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.select("Species").distinct().count()
+
+aggregation:
+
+simple aggregation:
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.agg({"Sepal_Length": "sum"}).show()
+
+aggregation with groupby:
+
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.groupBy('Species').agg({'Sepal_Length':'mean'}).show()
+
+statistical data:
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True)
+iris1_df1.describe(['Sepal_Length','Sepal_Width','Petal_Length','Petal_Width','Species']).show()
+
+calculating quantiles:
+
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+iris_schema = pyspark.sql.types.StructType([
+StructField("Sepal_Length", FloatType(), True),
+StructField("Sepal_Width", FloatType(), True),
+StructField("Petal_Length", FloatType(), True),
+StructField("Petal_Width", FloatType(), True),
+StructField("Species", StringType(), True)
+])
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True,schema=iris_schema)
+iris1_df1.approxQuantile( col='Sepal_Length', probabilities=[0.4, 0.6, 0.8], relativeError=0 )
+
+multidimensional view:
+
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+iris_schema = pyspark.sql.types.StructType([
+StructField("Sepal_Length", FloatType(), True),
+StructField("Sepal_Width", FloatType(), True),
+StructField("Petal_Length", FloatType(), True),
+StructField("Petal_Width", FloatType(), True),
+StructField("Species", StringType(), True)
+])
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True,schema=iris_schema)
+iris1_df1.cube('Species').mean().show()
+
+covariance and correlation:
+
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+iris_schema = pyspark.sql.types.StructType([
+StructField("Sepal_Length", FloatType(), True),
+StructField("Sepal_Width", FloatType(), True),
+StructField("Petal_Length", FloatType(), True),
+StructField("Petal_Width", FloatType(), True),
+StructField("Species", StringType(), True)
+])
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True,schema=iris_schema)
+print('co-variance - ' , iris1_df1.cov('Sepal_Length','Petal_Length'))
+print('correlation - ' , iris1_df1.corr('Sepal_Length','Petal_Length'))
+
+confusion matrix:
+
+Confusion matrix can be created using crosstab function.
+
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+iris_schema = pyspark.sql.types.StructType([
+StructField("Sepal_Length", FloatType(), True),
+StructField("Sepal_Width", FloatType(), True),
+StructField("Petal_Length", FloatType(), True),
+StructField("Petal_Width", FloatType(), True),
+StructField("Species", StringType(), True)
+])
+iris1_df1 = spark.read.csv(path='./dataset/iris.csv',sep=',',header=True,schema=iris_schema)
+iris1_df1.crosstab('Species','Species').show()
+
+
+
+
+training:
+
+pyspark --master yarn --conf spark.ui.port=12906 --num-executors 2 --conf spark.dynamicAllocation.enabled=false --executor-memory 4096M --executor-cores 2
+
+executor-cores are the logical cpu's that are assigned to the executors.
+
+it will allocate the executor with 4G+ some overhead for cache in the executor(which is used to transfer the data("code") that is sent from the driver to the executor)
+
+
+spark running modes:
+1.local
+2.standalone
+3.yarn
+4.mesos
+5.kubernetes
+
+
+sc.setLogLevel("INFO")
+
+pyspark.rdd.RDD -> pyspark.rdd.PipelinedRDD
+
+from pyspark import StorageLevel
+
+lines.persist(StorageLevel.MEMORY_ONLY) or lines.cache()
+
+diff storage levels in pyspark:
+1.DISK_ONLY
+2.MEMORY_ONLY
+3.MEMORY_AND_DISK 
+4.MEMORY_AND_DISK_SER
+5.MEMORY_ONLY_SER 
+6.OFF_HEAP 
+
+Number of tasks = number of partitions in the file
+say if a file is 1gb and there are 9 blocks
+tasks=9
+
+when there are shuffling activities while processing the data it will result in another stage. 
+each stage will have the tasks associated with it.
+
+collect() will return the list.
+
+lEven.reduce(lambda x,y:x+y)
+
+(or)
+
+from operator import add
+lEven.reduce(add)
+
+
+Transformations:
+map,filter,flatMap,reduceByKey,groupByKey,aggregateByKey,distinct,join,sortByKey,union,intersection,mapPartitions
+
+
+actions:
+reduce,collect,count,first,take,saveAsTextFile,takeSample
+
+groupByKey,reduceByKey,aggregateByKey will use the input RDD's of type (k,v)
+
+on applying groupByKey: it will return (k,Iterable[v1,v2])
+
+it is better to use reduceByKey or aggregateByKey than groupByKey because they will use internally the combiners and more performance.
+
+orderItems.repartition(4)
+//divides the data into 4 partitions
+
+diff b/w reduceByKey and aggregateByKey:
+if the intermediate output and the final output are different we can go with aggregateByKey.
+
+requirement:
+in orderitems table we need to count subtotal of orders and as well as count
+ordersmap=orders.map(lambda x:(int(x[0],(float(x[3],1))
+orderscountandtotal=ordersmap.reduceByKey(lambda x,y:(x[0]+y[0],x[1]+y[1]))
+
+similarly in aggregateByKey:
+ordersmap=orders.map(lambda x:(int(x[0],(float(x[3]))
+orderscountandtotal=ordersmap.aggregateByKey((0.0,0),
+								lambda x,y:(x[0]+y,x[1]+1),
+								lambda x,y:(x[0]+y[0],x[1]+y[1]))
+								
+
+join:
+join is applied on two datasets (k,v) (k,w) with the return type:(k,(v,w))
+ordersFilteredMap.join(orderItemsMap)
+
+similarly we can use leftOuterJoin, rightOuterJoin, and fullOuterJoin.
+
+sortByKey:
+sortByKey can also be called on (k,v)
+dailyRevenueSorted=dailyRevenue.sortByKey() //ascending
+
+//sortByDescending:
+dailyRevenueSorted=dailyRevenue.sortByKey(False)
+
+compositeSorting:
+oiMap=orderItems.map(lambda oi:((int(oi.split(",")[1]),float(oi.split(",")[4])),oi))
+oiMap.sortByKey() //displays both of the records in the key as ascending
+oiMap.sortByKey(False) //displays both of the records in the key as descending
+
+//one key with ascending another with descending:
+oiMap=orderItems.map(lambda oi:((int(oi.split(",")[1]),-float(oi.split(",")[4])),oi))
+
+
+mapPartitions:
+
+
+def getWordTuples(i):
+	import itertools as it
+	wordtuples=map(lambda s:(s,1),it.chain.from_iterable(map(lambda x:x.split(" "),i)))
+	return wordtuples
+
+wordTuples=lines.mapPartitions(lambda var:getWordTuples(var))
+
+
+performance tuning:
+1.use filter first
+2.join and aggregation(which one should be first?)
+3.shuffled partitions
+4.groupByKey vs (reduceByKey & aggregateByKey)
+5.broadcast variables
+6.compress the intermediate output.
+7.choosing appropriate file format.(Faster read time & faster write time)
+8.understanding the nature of the job:
+a.if it is a filter job, if we can increase the number of cores.
+b.if it is shuffle operation then we can reduce the number of executors.
+9.setting the number of executors depending on the size of the data?
+10.static allocation vs dynamic allocation
+11.coalesce and repartition
+12.using partition techniques(HashPartitioner (default) or RangePartitioner)
+13.kryo serializer
+
+
+								
+creating sparkContext:
+
+from pyspark import SparkConf,SparkContext
+
+conf=SparkConf().setMaster("local").setAppName("Daily Revenue").set("conf.ui.port","12901")
+sc=SparkContext(conf)
+
+orders=sc.textFile("/users/retail_db/orders/*")
+
+//instead of hardcoding the input paths it is better to read the data using ConfigParsers.
+
+from pyspark import SparkConf,SparkContext
+import ConfigParser as cp
+import sys
+
+
+props=cp.RawConfigParser()
+props.read("#application.properties file from the base proj dir#")
+env=sys.argv[1]
+
+conf=SparkConf().setMaster(props.get(env,"executionMode")).setAppName("Daily Revenue").set("conf.ui.port","12901")
+sc=SparkContext(conf)
+
+application.properties:
+
+[dev]
+executionMode=local
+input.base.dir=/users/retail_db/orders/*
+output.base.dir=/users/retail_db/output/orders/
+
+[prod]
+executionMode=yarn-client
+input.base.dir=public/data/retail_db/orders/*
+output.base.dir=public/data/retail_db/output/orders/
+
+
+submitting the job using spark-submit:
+
+spark-submit --master yarn \
+--deploy-mode client --conf spark.ui.port=12901 \
+spark.dynamicAllocation.enabled=false src/main/python/retail_db/DailyRevenue.py prod
+
+
+to check if the file already exists in the hdfs using pyspark code:
+
+Path=sc._gateway.jvm.org.apache.hadoop.fs.Path
+FileSystem=sc._gateway.jvm.org.apache.hadoop.fs.FileSystem
+Configuration=sc._gateway.jvm.org.apache.hadoop.conf.Configuration
+
+fs=FileSystem.get(Configuration())
+
+if(fs.exists(Path(inputPath))):
+	print(f"{inputPath} already exists")
+
+if(fs.exists(Path(outputPath)):
+	fs.delete(Path(outputPath),true) //deleting the outputpath if already exists and true is the recursive deletion.
+
+Accumulators | BroadCast Variables | repartition | coalesce:
+
+Accumulator:
+ordersCount=sc.accumulator(0)
+
+def getOrderTuples(rec):
+	ordersCount.add(1)
+	return (int(rec.split(",")[0]),1)
+	
+//accumulators are mainly used for sanity checks.
+
+broadcast variables:
+the broadcast variables are used for map side joins which will reduce the costly shuffle operations.
+
+productsDict=dict(map(lambda p:(int(p.split(",")[0]),p.split(",")[1]),products))
+bv=sc.broadcast(productsDict)
+
+revenueByProductId.map(lambda productRevenue:bv.value[productRevenue[0]] +"\t"+ str(productRevenue[1]))
+
+repartition and coalesce:
+
+repartition results in the shuffle activity and it will increase/decrease the number of partitions.
+
+ordersMapRepartition=ordersMap.repartition(10)
+
+coalesce results in the merge and hence inorder to reduce the number of partitions coalesce is more useful.
+
+ordersMapRepartition=ordersMap.coalesce(2)
+
+DataFrame:
+dataframes are rdds with schema.
+
+ordersDF= spark.read.csv("/retail_db/orders").toDF('order_id,'order_status')
+
+ordersDF.printSchema() //prints the schema.
+
+ordersDF.describe().show() // will print the table statistics.
+
+ordersDF.select('order_id').show()
+
+ordersDF.createTempView('orders')
+
+spark.sql("select * from orders").show()
+
+creating the spark variable:
+
+from pyspark.sql import SparkSession
+
+spark=SparkSession.builder.master("local").
+		appName("Daily Revenue").getOrCreate()
+		
+		
+sc=spark.SparkContext()
+
+//to read the data:
+spark.read.csv() or spark.read.text()
+
+ordersCSV= spark.read.csv("retail_db\orders").toDF('order_id','order_status')
+
+from pyspark.sql.types import IntegerType
+
+orders=ordersCSV.
+		withColumn('order_id',ordersCSV.order_id.cast(IntegerType))
+		
+reading the data from the hive:
+
+orders=spark.read.table('demoDb.orders')
+
+(or)
+
+orders=spark.sql("select * from demoDb.orders")
+
+//to read the data from the databases:
+first the corresponding drivers(Jar) files should be pointed.
+
+pyspark --master yarn --conf spark.ui.port=12906
+--jars /usr/shar/mysql-connector-java.jar
+--driver-class-path /usr/shar/mysql-connector-java.jar
+
+orders=spark.read.
+		format("jdbc").
+		option('url','jdbc:mysql://demo.com").
+		option("dbtable","retail_db.orders").
+		option("user","retail_user").
+		option("password","itversity").
+		load()
+
+(or)
+
+orders=spark.read.jdbc("jdbc:mysql://demo.com","retail_db.orders",properties={"user":"retail_user","password":"itversity"})
+
+orders=spark.read.jdbc("jdbc:mysql://demo.com","retail_db.orders",properties={"user":"retail_user","password":"itversity"},
+numPartitions=4)
+
+orderItems=spark.read.jdbc("jdbc:mysql://demo.com","retail_db.order_items",properties={"user":"retail_user","password":"itversity"},
+numPartitions=4,column='order_item_order_id',lowerBound='10000',
+upperBound='20000')
+
+orderItems.write.csv("/users/demo/data/")
+
+to run the query:
+
+orders=spark.read.jdbc("jdbc:mysql://demo.com",
+"{select * from orders} q",properties={"user":"retail_user","password":"itversity"})
+
+
+DataFrame Operations:
+
+from pyspark.sql.functions import *
+
+orders.select(substring('order_date',1,7).alias('order_month')).show()
+
+orders.select(lower(orders.order_status).alias('order_status'))
+
+orders.withColumn('order_status',lower(orders.order_status)).show()
+//it will return all the data that is existing in the table before and on top of it it will return one more column mentioned above in the with column.
+
+other functions:
+trim,
+
+date_format:
+orders.withColumn('order_month',date_format("orders.order_date","YYYYMM")).show()
+
+orders.selectExpr('case when order_status in ("COMPLETE","CLOSED") then "COMPLETED"
+						when order_status=="CANCELLED" then "CANCELLATION"
+						ELSE "PENDING" end')
+						
+
+selecting the DF columns:
+
+orders.select('order_id','order_status').show()
+
+(or)
+
+orders.select(orders.order_id,orders.order_status).show()
+
+orders.select("*").show()
+
+orders.selectExpr('date_format(order_date,"YYYYMM") as date_month').show()
+
+filter or where:
+orders.where("order_status in ('COMPLETE','CLOSED')").show()
+
+orders.where((orders.order_status=='COMPLETE').__or__(orders.order_status=='
+CLOSED'))
+
+//filter and where are alias to each other in DataFrames.
+
+orderItems.filter("order_item_order_id=2").agg(sum("order_item_subtotal")).show()
+
+orderItems.groupBy('order_item_order_id').sum("order_item_subtotal").show()
+
+//after group by some of the functionalities such as sum,min,max,count are directly exposed.
+
+//sort and orderBy are alias to each other in dataframes.
+
+orders.orderBy('order_status').show()
+
+orders.orderBy('order_date','order_status').show()
+
+orderItems.orderBy(orderItems.order_item_order_id,orderItems.order_item_subtotal.desc()).show()
+
+to store:
+dailyProductRevenueSorted.write.csv(outputPath)
+
+Windowing or Analytic functions:
+from pyspark.sql.window import Windowing
+spec=Window.partitionBy("order_item_order_id")
+type(spec) //pyspark.sql.window.WindowSpec
+
+orderItems.select('order_item_order_id','order_item_subtotal',sum(order_item_subtotal).over(spec)).show()
+
+spec=Window.partitionBy('order_item_order_id')
+orderItems.withColumn('order_revenue',sum('order_item_subtotal').over(spec)).withColumn('order_avg_revenue',avg('order_item_subtotal').over(spec)).show()
+
+orderItems.withColumn('next_order_items_revenue",
+lead('order_item_subtotal').over(spec)).
+orderBy('order_item_order_id',orderItems.order_item_subtotal.desc()).show()
+
+other windowing functions:
+rank(),dense_rank(),row_number,first,last
+
+dailyProductRevenueRank=dailyRevenue.
+withColumn('rnk',rank().over(Window.partitionBy(dailyRevenue.order_date).orderBy(dailyRevenue.revenue.desc()))).show()
+
+//drop is used to drop the unnecessary columns of the dataframe.
+
+spark.sql("create database BootCampDemo")
+
+orders.createOrReplaceTempView('orders')
+
+order_items.createOrReplaceTempView('order_items')
+
+spark.sql("use BootCampDemo")
+
+spark.sql("show tables").show()
+
+spark.sql("show functions").collect()
+
+spark.sql("describe function substring").collect()
+
+spark.sql('''select * from orders o join order_items oi
+			 on o.order_id=oi.order_item_order_id
+			 where o.order_status in ("COMPLETE","CLOSED")''').show()
+			 
+//if we want to have the filter after aggregating the data then we can use the having clause.
+//to set the shuffle partitions in sql:
+spark.conf.set("spark.sql.shuffle.partitions",2)
+//by default it will use 200 threads.
+
+spark.sql("select sum(order_item_subtotal) over (partition by order_item_order_id) from order_items").show()
+
+//to convert the string type to int in sql:
+
+CAST(Count1 AS INT) AS landMass
+
+execution flow of sql:
+from -> where and/or join ->group by -> having->select ->order by
+
+compression algorithms:
+
+standard algorithms: gzip,snappy,lzo,bzip2
+//some of the compressions are splittable.
+
+say, if there is a file of 20gb and when it is stored in hdfs it takes 160 blocks with the replication factor of 1
+and if the same file is compressed using the compression algorithms like gzip: the file size may be 2gb and it may occupy 16 blocks in the hdfs.
+
+in compression alogorithms there are two types:
+1.splittable
+2.non-splittable
+
+both the splittable and non-splittable algorithms occupy the same number of blocks in the hdfs.but when running the map tasks the splittable algorithms may use 16 map tasks for the 16 blocks where as for non-splittable it may use only one map task.
+
+because while performing operations all the blocks that are divided by non-splittable algorithms should be gathered at one place and processed in that respective executor.
+
+The catch is while going for the compression we need to go with the algorithms with native implementation because it will help in reducing the time,I/o for the native implementations.
+except bzip2 every algorithm has native implementation and all of these are non-splittable.
+
+df.write.option("codec","gzip").csv("<path>")
+
+file formats:
+sequence file
+ORC --snappy(default)
+avro  --snappy,deflate
+spark.sql.avro.compression.codec
+parquet -- supported codecs- snappy,gzip,lzo
+spark.sql.parquet.compression.codec
+
+
+pyspark --master yarn --conf spark.ui.port=12901 --packages com.databricks:spark-avro_2.11:4.0.0
+
+write->format->save
+read->format->load
+
+//with json the option should be "compression"
+df.write.option("compression","gzip").json("<path>")
+
+
+spark.conf.set("spark.sql.parquet.compression.codec","gzip")
+orders.write.parquet("path")
+
+orders.write.format('com.databricks.spark.avro').save("path")
+
+4 modes while writing the data:
+1.append
+2.overwrite
+3.error
+4.ignore
+
+we can determine how long the rdd's can persist in the memory with the config:
+spark.cleaner.ttl
+
+ttl->time to live
+It defaults to infinite but for it to take any effect, we also need to set spark.streaming.unpersist to false, in order for Spark streaming to 'let live' the RDDs generated.
+
+//to stop the sparkContext:
+sc.stop()
+
+
+
+
+
+
+doubts:
+1.how to eliminate the first row with column names?
+2.diff b/w fold and reduce?
+3.diff b/w foldByKey and reduceByKey?
+4.what is quantiles calculation?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
