@@ -1,0 +1,39 @@
+1.how to launch spark in standalone mode?
+2.what is hive upsert
+3.difference between hive upsert and update
+4.how to load the data into the hive table from spark
+5.how to eliminate the duplicate records from the dataframe and dataset.(with duplicate columns)
+6.how to write the data into the hdfs from spark and what if we don't specify the format and field delimiter.
+7.spark datasets off heap memory cleaning.
+
+different file formats in hadoop
+different compressions in hadoop
+
+
+common:
+difference between cores and logical processors
+
+
+doubts:
+****diff b/w fold and reduce?
+****diff b/we foldByKey and reduceByKey?
+
+
+
+what is sort merge bucket join
+
+what is the diff b/w hive context and sql context in spark?
+
+how join works in hive?
+
+spark memory internals
+
+diff b/w java serializer and kryo serializer
+
+what are catalyst and tungsten optimizers
+
+how can i increase the bucketing files in hive table
+
+diff b/w destroy and unpersist
+
+what is data skew?
