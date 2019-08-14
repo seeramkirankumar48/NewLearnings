@@ -1,0 +1,41 @@
+links:
+-----
+
+Python and DataStuff:
+---------------------
+
+https://runestone.academy/runestone/books/published/pythonds/index.html
+https://spark.apache.org/docs/1.1.1/api/python/pyspark.rdd.RDD-class.html#sortByKey
+https://kaizen.itversity.com/courses/apache-spark-2-with-python-3-pyspark/
+http://highscalability.com/
+https://codingbat.com/python
+
+Learning linux:
+---------------
+https://linuxjourney.com/lesson/linux-history
+
+
+Download Ebooks:
+----------------
+http://www.bookslibrary.in/?fbclid=IwAR3jfOOv-ZcS-_F_kGq7GfmdbKlxVQwwogP0qmstItg-qfZszHyvYdzJpSk
+
+Coding problems:
+----------------
+https://projecteuler.net/archives
+
+Interview questions company wise:
+---------------------------------
+https://www.geeksforgeeks.org/experienced-interview-experiences-company-wise/
+
+MF:
+--
+https://www.valueresearchonline.com/funds/newsnapshot.asp?schemecode=26133
+https://online.lntmf.com/
+https://www.moneycontrol.com/mutual-funds/nav/hdfc-small-cap-fund-direct-plan/MMS025
+https://www.moneycontrol.com/mutual-funds/nav/l-t-emerging-businesses-fund-direct-plan/MCC492
+http://www.moneycontrol.com/indian-indices/nifty-smallcap-100-53.html
+https://economictimes.indiatimes.com/uti-nifty-next-50-index-fund--direct-plan/mffactsheet/schemeid-36491.cms
+https://timesofindia.indiatimes.com/live-tv/et-now/video
+
+
+
